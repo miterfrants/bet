@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Auth</title>
+    <link href="/common.css" rel="stylesheet">
+    <link href="/popup/popup.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="auth">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <div class="profile">
+                    <img />
+                </div>
+                <div class="name"></div>
+            </div>
+            <div class="d-flex align-items-center">
+                投注:
+                <div class="bet-coins pad-l-5"></div>
+                <span class="pad-l-5">X</span>
+                <img class="coin pad-l-5" src="/imgs/coin.png" />
+            </div>
+            <div class="d-flex align-items-center">
+                存款:
+                <div class="earn-coins pad-l-5"></div>
+                <span class="pad-l-5">X</span>
+                <img class="coin pad-l-5" src="/imgs/coin.png" />
+            </div>
+        </div>
+        <button class="sync-git-hub-issue pad-t-10">
+            Sync Github Issue
+        </button>
+    </div>
+    <div class="unauth">
+        <button class="auth-google d-block">
+            使用 Google 登入
+        </button>
+    </div>
+
+    <script type="module" src="popup.js"></script>
+</body>
+
+</html>
