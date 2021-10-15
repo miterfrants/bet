@@ -7,3 +7,4 @@ appsettings.json
 secrets/
 node_modules
 Migrations/
+.vscode
