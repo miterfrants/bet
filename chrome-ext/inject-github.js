@@ -74,7 +74,7 @@ if (location.origin === 'https://github.com' && location.pathname === '/miterfra
         const userId = window[`${variablePrefix}userId`];
         const apiEndpoint = window[`${variablePrefix}apiEndpoint`];
         const betCoins = Number(window[`${variablePrefix}betCoins`]);
-        const coinIconHtml = '<div class="overflow-hidden" style="width:20px; height: 20px; margin-left: 10px; margin-right: 10px"><img style="width: 100%; height: 100%; object-fit: contain;" src="https://dev.bargaining-chip.homo.tw/assets/imgs/coin.png" /> </div> X ';
+        const coinIconHtml = '<div class="overflow-hidden" style="width:20px; height: 20px; margin-left: 10px; margin-right: 10px"><img style="width: 100%; height: 100%; object-fit: contain;" src="https://bet.homo.tw/assets/imgs/coin.png" /> </div> X ';
         const elNotification = document.querySelector('notification-indicator');
         const elNotificationParent = elNotification.parentNode;
         const elHeader = elNotificationParent.parentNode;
@@ -95,13 +95,13 @@ if (location.origin === 'https://github.com' && location.pathname === '/miterfra
         elIssues.forEach(async (elIssue) => {
             const id = elIssue.dataset.id;
             let resp;
-            const fetchAction = await fetch(`https://dev.bargaining-chip.homo.tw:5001/api/v1/organizations/2/projects/6/tasks/by-external-id/${id}`, {
+            const fetchAction = await fetch(`${apiEndpoint}/organizations/2/projects/6/tasks/by-external-id/${id}`, {
                 headers: {
                     Authorization: 'Bearer ' + token
                 }
             });
             if (fetchAction.status === 404) {
-                const createAction = await fetch('https://dev.bargaining-chip.homo.tw:5001/api/v1/organizations/2/projects/6/tasks', {
+                const createAction = await fetch(`${apiEndpoint}/organizations/2/projects/6/tasks`, {
                     method: 'POST',
                     headers: {
                         Authorization: 'Bearer ' + token,

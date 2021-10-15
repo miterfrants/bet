@@ -4,13 +4,9 @@ import {
 } from './config.js';
 
 import {
-    extendStringProtoType
-} from './util/extended-prototype.js';
-
-import {
     ExtDataService
 } from './data-service/ext.js';
-extendStringProtoType(); ;
+
 ExtDataService.Init(API, RESPONSE_STATUS);
 window.ExtDataService = ExtDataService;
 
@@ -41,7 +37,7 @@ function injectGithub (userId, token, earnCoins, betCoins) {
       window['homo.bargainingChip.earnCoins'] = ${earnCoins};
       window['homo.bargainingChip.betCoins'] = ${betCoins};
       window['homo.bargainingChip.userId'] = ${userId};
-      window['homo.bargainingChip.apiEndpoint'] = ${API.ENDPOINT};
+      window['homo.bargainingChip.apiEndpoint'] = '${API.ENDPOINT}';
     `
         }, function () {
             chrome.tabs.executeScript(tabs[0].id, { file: '/inject-github.js' });
