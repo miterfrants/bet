@@ -35,6 +35,6 @@ document.querySelector('.auth-google').addEventListener('click', async () => {
 
 document.querySelector('.sync-git-hub-issue').addEventListener('click', async () => {
     chrome.storage.sync.get(['token', 'userInfo'], async (storage) => {
-        Data.SyncGithub(storage.userInfo.id, storage.token, document.querySelector('.bet-coins').innerHTML, document.querySelector('.earn-coins').innerHTML);
+        Data.SyncGithub(storage.userInfo.id, `${storage.userInfo.lastName}${storage.userInfo.firstName}`, storage.token, document.querySelector('.bet-coins').innerHTML, document.querySelector('.earn-coins').innerHTML);
     });
 });

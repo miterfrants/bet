@@ -72,12 +72,14 @@ if (location.origin === 'https://github.com' && location.pathname === '/miterfra
         const variablePrefix = 'homo.bargainingChip.';
         const token = window[`${variablePrefix}token`];
         const userId = window[`${variablePrefix}userId`];
+        const name = window[`${variablePrefix}name`];
         const apiEndpoint = window[`${variablePrefix}apiEndpoint`];
         const betCoins = Number(window[`${variablePrefix}betCoins`]);
         const coinIconHtml = '<div class="overflow-hidden" style="width:20px; height: 20px; margin-left: 10px; margin-right: 10px"><img style="width: 100%; height: 100%; object-fit: contain;" src="https://bet.homo.tw/assets/imgs/coin.png" /> </div> X ';
         const elNotification = document.querySelector('notification-indicator');
-        const elNotificationParent = elNotification.parentNode;
-        const elHeader = elNotificationParent.parentNode;
+        const elDetailMenu = document.querySelector('details-menu');
+        const elHeaderItem = elNotification ? elNotification.parentNode : elDetailMenu.parentNode;
+        const elHeader = elHeaderItem.parentNode;
 
         if (elHeader.dataset.injected !== 'true') {
             const elHeaderItemBetIcon = document.createElement('div');
@@ -86,7 +88,7 @@ if (location.origin === 'https://github.com' && location.pathname === '/miterfra
             });
             elHeaderItemBetIcon.innerHTML = `${coinIconHtml}<span class="homo-bet-coins">${betCoins}</span> `;
             elHeaderItemBetIcon.style.whiteSpace = 'nowrap';
-            elHeader.insertBefore(elHeaderItemBetIcon, elNotificationParent);
+            elHeader.insertBefore(elHeaderItemBetIcon, elHeaderItem);
             elHeaderItemBetIcon.querySelector('.homo-bet-coins').dataset[`${variablePrefix}betCoins`] = betCoins;
             elHeader.dataset.injected = 'true';
         }
@@ -94,8 +96,7 @@ if (location.origin === 'https://github.com' && location.pathname === '/miterfra
         const elIssues = document.querySelectorAll('[aria-label="Issues"] > div > div');
         elIssues.forEach(async (elIssue) => {
             const id = elIssue.dataset.id;
-            let resp;
-            const fetchAction = await fetch(`${apiEndpoint}/organizations/2/projects/6/tasks/by-external-id/${id}`, {
+            let fetchAction = await fetch(`${apiEndpoint}/organizations/2/projects/6/tasks/by-external-id/${id}`, {
                 headers: {
                     Authorization: 'Bearer ' + token
                 }
@@ -113,11 +114,15 @@ if (location.origin === 'https://github.com' && location.pathname === '/miterfra
                         name: ''
                     })
                 });
-                resp = await createAction.json();
-            } else {
-                resp = await fetchAction.json();
+                await createAction.json();
+                fetchAction = await fetch(`${apiEndpoint}/organizations/2/projects/6/tasks/by-external-id/${id}`, {
+                    headers: {
+                        Authorization: 'Bearer ' + token
+                    }
+                });
             }
 
+            const resp = await fetchAction.json();
             const elTitle = elIssue.querySelector('.markdown-title');
 
             const qty = resp.ownerLockedBet + resp.ownerFreeBet + resp.excludeOwnerBet;
@@ -162,7 +167,7 @@ if (location.origin === 'https://github.com' && location.pathname === '/miterfra
                 elIssue.querySelector('.exptected-finish-at').classList.remove('d-none');
                 elIssue.querySelector('.exptected-finish-at').innerHTML = resp.expectedFinishAt.substring(0, resp.expectedFinishAt.indexOf('T'));
                 elIssue.querySelector('.homo-bargaining-minus').classList.add('d-none');
-                elIssue.querySelector('.homo-bargaining-add').classList.add('d-none');
+                elIssue.querySelector('.homo-bargaining-add').classList.remove('d-none');
             } else {
                 elIssue.querySelector('.btn-claim').classList.remove('d-none');
                 elIssue.querySelector('.assignee').classList.add('d-none');
@@ -247,8 +252,19 @@ if (location.origin === 'https://github.com' && location.pathname === '/miterfra
                     const elIssue = e.currentTarget.closest('.issue');
                     const taskId = Number(elIssue.dataset[`${variablePrefix}taskId`]);
                     const days = prompt('預計完成的時間 days');
+                    if (isNaN(days)) {
+                        return;
+                    }
                     Homo.Task.Assign(apiEndpoint, token, taskId, days, (resp) => {
                         if (resp.status && resp.status === 'OK') {
+                            elIssue.querySelector('.btn-claim').classList.add('d-none');
+                            elIssue.querySelector('.homo-bargaining-minus').classList.add('d-none');
+                            elIssue.querySelector('.assignee').classList.remove('d-none');
+                            elIssue.querySelector('.assignee').innerHTML = name;
+                            elIssue.querySelector('.exptected-finish-at').classList.remove('d-none');
+                            const result = new Date();
+                            result.setDate(result.getDate() + 10);
+                            elIssue.querySelector('.exptected-finish-at').innerHTML = result.toISOString().split('T')[0];
                             return;
                         }
                         alert(resp.message);

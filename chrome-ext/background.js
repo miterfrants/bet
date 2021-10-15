@@ -12,7 +12,7 @@ window.ExtDataService = ExtDataService;
 
 chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
     if (req.isSyncGithub) {
-        injectGithub(req.userId, req.token, req.earnCoins, req.betCoins);
+        injectGithub(req.userId, req.name, req.token, req.earnCoins, req.betCoins);
         return;
     }
     chrome.storage.sync.get(['token', 'userInfo'], function (storage) {
@@ -29,7 +29,7 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
     return true;
 });
 
-function injectGithub (userId, token, earnCoins, betCoins) {
+function injectGithub (userId, name, token, earnCoins, betCoins) {
     chrome.tabs.query({ currentWindow: true, active: true }, function (tabs) {
         chrome.tabs.executeScript(tabs[0].id, {
             code: `
@@ -38,6 +38,7 @@ function injectGithub (userId, token, earnCoins, betCoins) {
       window['homo.bargainingChip.betCoins'] = ${betCoins};
       window['homo.bargainingChip.userId'] = ${userId};
       window['homo.bargainingChip.apiEndpoint'] = '${API.ENDPOINT}';
+      window['homo.bargainingChip.name'] = '${name}';
     `
         }, function () {
             chrome.tabs.executeScript(tabs[0].id, { file: '/inject-github.js' });

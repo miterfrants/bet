@@ -56,10 +56,11 @@ export const Data = {
             });
         });
     },
-    SyncGithub: (userId, token, betCoins, earnCoins) => {
+    SyncGithub: (userId, name, token, betCoins, earnCoins) => {
         chrome.runtime.sendMessage({
             isSyncGithub: true,
             userId,
+            name,
             token,
             betCoins,
             earnCoins

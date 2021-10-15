@@ -7,7 +7,7 @@
     "SIGNIN_FAILED": "帳號或密碼錯誤",
     "USER_BE_BLOCKED": "使用者被封鎖",
     "SMS_ERROR": "簡訊商回傳錯誤: {message}",
-    "TASK_HAS_CLAIMED": "已經被認領了",
+    "TASK_HAS_CLAIMED": "已經被認領了，無法減少籌碼",
     "NOT_ASSIGNEE": "非認領人不能標完成",
     "ASSIGNEE_NOT_ALLOW_APPROVE": "認領人不能自己把任務狀態改成已完成",
     "TASK_STATUS_ERROR": "任務狀態錯誤"

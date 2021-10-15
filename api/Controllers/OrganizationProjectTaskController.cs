@@ -82,11 +82,6 @@ namespace Homo.Bet.Api
             {
                 throw new Homo.Core.Constants.CustomException(ERROR_CODE.DATA_NOT_FOUND, System.Net.HttpStatusCode.NotFound);
             }
-            if (task.AssigneeId != null)
-            {
-                throw new Homo.Core.Constants.CustomException(ERROR_CODE.TASK_HAS_CLAIMED, System.Net.HttpStatusCode.Forbidden);
-            }
-
             // first one bet give author of issue one coin
             int taskBetCoins = CoinsLogDataService.GetTaskBetCoins(_dbContext, task.Id);
             List<CoinLog> logs = CoinsLogDataService.GetAll(_dbContext, task.Id, task.CreatedBy, COIN_LOG_TYPE.EARN);
@@ -102,7 +97,10 @@ namespace Homo.Bet.Api
             }
             else
             {
-
+                if (task.AssigneeId != null && dto.Qty < log.Qty)
+                {
+                    throw new Homo.Core.Constants.CustomException(ERROR_CODE.TASK_HAS_CLAIMED, System.Net.HttpStatusCode.Forbidden);
+                }
                 CoinsLogDataService.Update(_dbContext, log, extraPayload.Id, dto);
             }
             return new { status = Homo.Core.Constants.CUSTOM_RESPONSE.OK };
