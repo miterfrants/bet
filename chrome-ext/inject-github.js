@@ -66,7 +66,7 @@ if (!window.Homo) {
     };
 }
 
-if (location.origin === 'https://github.com' && location.pathname === '/miterfrants/homo-iot-hub/issues') {
+if (location.origin === 'https://github.com' && location.pathname === '/miterfrants/item-hub/issues') {
     (() => {
         // add coins
         const variablePrefix = 'homo.bargainingChip.';
