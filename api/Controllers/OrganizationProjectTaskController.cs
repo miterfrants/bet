@@ -97,7 +97,7 @@ namespace Homo.Bet.Api
             }
             else
             {
-                if (task.AssigneeId != null && dto.Qty < log.Qty)
+                if (task.AssigneeId != null && System.Math.Abs(dto.Qty) < System.Math.Abs(log.Qty))
                 {
                     throw new Homo.Core.Constants.CustomException(ERROR_CODE.TASK_HAS_CLAIMED, System.Net.HttpStatusCode.Forbidden);
                 }

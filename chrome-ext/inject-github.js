@@ -66,7 +66,7 @@ if (!window.Homo) {
     };
 }
 
-if (location.origin === 'https://github.com' && location.pathname === '/miterfrants/item-hub/issues') {
+if (location.origin === 'https://github.com' && location.pathname === '/miterfrants/itemhub/issues') {
     (() => {
         // add coins
         const variablePrefix = 'homo.bargainingChip.';
@@ -181,7 +181,7 @@ if (location.origin === 'https://github.com' && location.pathname === '/miterfra
             if (resp.status < 3) {
                 const isAssignee = userId === resp.assigneeId;
                 const beMarkedFinish = resp.status === 2;
-                if (isAssignee) {
+                if (isAssignee && !beMarkedFinish) {
                     elIssue.querySelector('.btn-mark-finish').classList.remove('d-none');
                 } else {
                     elIssue.querySelector('.btn-mark-finish').classList.add('d-none');
