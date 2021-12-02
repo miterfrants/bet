@@ -163,7 +163,7 @@ namespace Homo.Bet.Api
             TaskDataservice.Done(_dbContext, extraPayload.Id, task);
             int coins = CoinsLogDataService.GetTaskBetCoins(_dbContext, task.Id);
             CoinsLogDataService.Create(_dbContext, task.AssigneeId.GetValueOrDefault(), task.Id, extraPayload.Id, COIN_LOG_TYPE.EARN, new DTOs.CoinLog() { Qty = -coins });
-            int bonus = (int)System.Math.Round((double)(coins / 5));
+            int bonus = (int)System.Math.Ceiling((double)(coins / 5));
             CoinsLogDataService.Create(_dbContext, extraPayload.Id, task.Id, extraPayload.Id, COIN_LOG_TYPE.EARN, new DTOs.CoinLog() { Qty = -bonus });
             return new { status = Homo.Core.Constants.CUSTOM_RESPONSE.OK };
         }
