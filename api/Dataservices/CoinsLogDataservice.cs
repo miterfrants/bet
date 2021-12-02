@@ -41,6 +41,21 @@ namespace Homo.Bet.Api
                 .Sum(x => x.Qty);
         }
 
+        public static List<UserCoinLogBalance> GetFreeBetUsers(BargainingChipDBContext dbContext)
+        {
+            return dbContext.CoinLog
+                .Where(x =>
+                    x.DeletedAt == null
+                    && x.Type == COIN_LOG_TYPE.BET
+                )
+                .GroupBy(x => x.OwnerId)
+                .Select(g => new UserCoinLogBalance()
+                {
+                    OwnerId = g.Key,
+                    Qty = g.Sum(x => x.Qty)
+                }).ToList();
+        }
+
         public static CoinLog GetFreeOneByTaskIdAndOwnerId(BargainingChipDBContext dbContext, long taskId, long ownerId, bool asNoTracking = false)
         {
             IQueryable<CoinLog> dbSet;

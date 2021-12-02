@@ -73,6 +73,11 @@ namespace Homo.Bet.Api
                 c.TimeZoneInfo = TimeZoneInfo.Local;
                 c.CronExpression = @"0 0 * * 0";
             });
+            services.AddCronJob<BetCoinNotification>(c =>
+            {
+                c.TimeZoneInfo = TimeZoneInfo.Local;
+                c.CronExpression = @"0 9 * * 3";
+            });
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo() { Title = "Api Doc", Version = "v1" });

@@ -28,7 +28,7 @@ namespace Homo.Bet.Api
 
         public override System.Threading.Tasks.Task StartAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("GiveCoinCronJob starts.");
+            _logger.LogInformation("RenewCoinLog starts.");
             return base.StartAsync(cancellationToken);
         }
 
@@ -48,7 +48,7 @@ namespace Homo.Bet.Api
 
         public override System.Threading.Tasks.Task StopAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("CronJob is stopping.");
+            _logger.LogInformation("RenewCoinLog is stopping.");
             return base.StopAsync(cancellationToken);
         }
     }
