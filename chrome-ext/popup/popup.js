@@ -12,6 +12,14 @@ function init () {
         if (storage.token) {
             const respEarnCoins = await Data.GetEarnCoinsAsync(storage.token);
             const respBetCoins = await Data.GetBetCoinsAsync(storage.token);
+            if (respEarnCoins.data.errorKey === 'TOKEN_EXPIRED') {
+                chrome.storage.sync.set({
+                    token: '',
+                    userInfo: ''
+                });
+                init();
+                return;
+            }
             document.querySelector('.bet-coins').innerHTML = respBetCoins.data.qty;
             document.querySelector('.earn-coins').innerHTML = respEarnCoins.data.qty;
 
