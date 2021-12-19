@@ -37,7 +37,7 @@ namespace Homo.Bet.Api
         {
             _logger.LogInformation($"{DateTime.Now:hh:mm:ss} is working.");
             _dbContext = _serviceProvider.GetService<BargainingChipDBContext>();
-            List<UserCoinLogBalance> hasFreeBetCoinsUsers = CoinsLogDataService.GetHasFreeBetCoinsUsers(_dbContext);
+            List<UserCoinLogBalance> hasFreeBetCoinsUsers = CoinsLogDataService.GetFreeBetUsers(_dbContext).Where(x => x.Qty > 0).ToList();
             List<long> userIds = hasFreeBetCoinsUsers.Select(x => x.OwnerId).ToList<long>();
             List<User> users = UserDataservice.GetAllByIds(userIds, _dbContext);
             users.ForEach(user =>
