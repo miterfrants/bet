@@ -36,6 +36,18 @@ namespace Homo.Bet.Api
                 .OrderByDescending(x => x.Id)
                 .ToList();
         }
+
+        public static List<Task> GetBeingExpiredTask(BargainingChipDBContext dbContext, int days)
+        {
+            return dbContext.Task
+                .Where(x =>
+                    x.DeletedAt == null
+                    && x.ExpectedFinishAt.GetValueOrDefault().AddDays(days) <= DateTime.Now
+                )
+                .OrderByDescending(x => x.Id)
+                .ToList();
+        }
+
         public static int GetRowNum(BargainingChipDBContext dbContext, long organizationId, long projectId, string name)
         {
             return dbContext.Task
@@ -119,6 +131,7 @@ namespace Homo.Bet.Api
             task.ExpectedFinishAt = DateTime.Now.AddDays(WorkDays);
             dbContext.SaveChanges();
         }
+
         public static void MarkFinish(BargainingChipDBContext dbContext, Task task)
         {
             task.Status = TASK_STATUS.BE_MARK_FINSIH;
