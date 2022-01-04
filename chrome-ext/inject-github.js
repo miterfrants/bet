@@ -1,4 +1,3 @@
-
 if (!window.Homo) {
     let coinLogUpdateTimer;
     window.Homo = {
@@ -22,6 +21,20 @@ if (!window.Homo) {
                 });
                 const resp = await updateAction.json();
                 callback(resp);
+            },
+            Get: async (apiEndpoint, token, callback) => {
+                const fetchAction = await fetch(`${apiEndpoint}/coins/bet`, {
+                    method: 'GET',
+                    headers: {
+                        Authorization: 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const resp = await fetchAction.json();
+                if (callback) {
+                    callback(resp);
+                }
+                return resp;
             }
         },
         Task: {
@@ -67,14 +80,16 @@ if (!window.Homo) {
 }
 
 if (location.origin === 'https://github.com' && location.pathname === '/miterfrants/itemhub/issues') {
-    (() => {
+    (async () => {
         // add coins
         const variablePrefix = 'homo.bargainingChip.';
         const token = window[`${variablePrefix}token`];
         const userId = window[`${variablePrefix}userId`];
         const name = window[`${variablePrefix}name`];
         const apiEndpoint = window[`${variablePrefix}apiEndpoint`];
-        const betCoins = Number(window[`${variablePrefix}betCoins`]);
+        let betCoins = 0;
+        const respOfBetCoins = await Homo.Bet.Get(apiEndpoint, token);
+        betCoins = respOfBetCoins.qty;
         const coinIconHtml = '<div class="overflow-hidden" style="width:20px; height: 20px; margin-left: 10px; margin-right: 10px"><img style="width: 100%; height: 100%; object-fit: contain;" src="https://bet.homo.tw/assets/imgs/coin.png" /> </div> X ';
         const elNotification = document.querySelector('notification-indicator');
         const elDetailMenu = document.querySelector('details-menu');

@@ -12,7 +12,9 @@ window.ExtDataService = ExtDataService;
 
 chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
     if (req.isSyncGithub) {
-        injectGithub(req.userId, req.name, req.token, req.earnCoins, req.betCoins);
+        chrome.tabs.query({ currentWindow: true, active: true }, function (tabs) {
+            injectGithub(tabs[0].id, req.userId, req.name, req.token, req.earnCoins, req.betCoins);
+        });
         return;
     }
     chrome.storage.sync.get(['token', 'userInfo'], function (storage) {
@@ -29,10 +31,24 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
     return true;
 });
 
-function injectGithub (userId, name, token, earnCoins, betCoins) {
-    chrome.tabs.query({ currentWindow: true, active: true }, function (tabs) {
-        chrome.tabs.executeScript(tabs[0].id, {
-            code: `
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    if (changeInfo.status === 'complete' && tab.url === 'https://github.com/miterfrants/itemhub/issues') {
+        chrome.storage.sync.get(['token', 'userInfo'], async (storage) => {
+            injectGithub(
+                tabId,
+                storage.userInfo.id,
+                `${storage.userInfo.lastName}${storage.userInfo.firstName}`,
+                storage.token,
+                -1,
+                -1
+            );
+        });
+    }
+});
+
+function injectGithub (tabId, userId, name, token, earnCoins, betCoins) {
+    chrome.tabs.executeScript(tabId, {
+        code: `
       window['homo.bargainingChip.token'] = '${token}';
       window['homo.bargainingChip.earnCoins'] = ${earnCoins};
       window['homo.bargainingChip.betCoins'] = ${betCoins};
@@ -40,8 +56,7 @@ function injectGithub (userId, name, token, earnCoins, betCoins) {
       window['homo.bargainingChip.apiEndpoint'] = '${API.ENDPOINT}';
       window['homo.bargainingChip.name'] = '${name}';
     `
-        }, function () {
-            chrome.tabs.executeScript(tabs[0].id, { file: '/inject-github.js' });
-        });
+    }, function () {
+        chrome.tabs.executeScript(tabId, { file: '/inject-github.js' });
     });
 }
