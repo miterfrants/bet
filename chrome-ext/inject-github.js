@@ -314,6 +314,7 @@ if (location.origin === 'https://github.com' && location.pathname === '/miterfra
                     const taskId = Number(elIssue.dataset[`${variablePrefix}taskId`]);
                     const days = prompt('預計完成的時間 days');
                     if (isNaN(days)) {
+                        alert('為填入預計完成時間');
                         return;
                     }
                     Homo.Task.Assign(apiEndpoint, token, taskId, days, (resp) => {
@@ -324,8 +325,8 @@ if (location.origin === 'https://github.com' && location.pathname === '/miterfra
                             elIssue.querySelector('.assignee').innerHTML = name;
                             elIssue.querySelector('.exptected-finish-at').classList.remove('d-none');
                             const result = new Date();
-                            result.setDate(result.getDate() + 10);
-                            elIssue.querySelector('.exptected-finish-at').innerHTML = result.toISOString().split('T')[0];
+                            result.setDate(result.getDate() + Number(days));
+                            elIssue.querySelector('.exptected-finish-at').innerHTML = result.toLocaleDateString();
                             return;
                         }
                         alert(resp.message);
