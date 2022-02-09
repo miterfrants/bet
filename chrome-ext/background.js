@@ -32,7 +32,7 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
 });
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-    if (changeInfo.status === 'complete' && tab.url === 'https://github.com/miterfrants/itemhub/issues') {
+    if (changeInfo.status === 'complete' && tab.url.split('?')[0] === 'https://github.com/miterfrants/itemhub/issues') {
         chrome.storage.sync.get(['token', 'userInfo'], async (storage) => {
             injectGithub(
                 tabId,

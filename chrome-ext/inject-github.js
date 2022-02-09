@@ -113,7 +113,6 @@ if (location.origin === 'https://github.com' && location.pathname === '/miterfra
             const elInjectContainer = elIssue.querySelector('div>div:nth-child(3)');
             const elLink = elIssue.querySelector('div>a');
             const id = elLink.id.split('_')[1];
-            const globalId = elIssue.dataset.id;
 
             let fetchAction = await fetch(`${apiEndpoint}/organizations/2/projects/6/tasks/by-external-id/${id}`, {
                 headers: {
@@ -121,13 +120,7 @@ if (location.origin === 'https://github.com' && location.pathname === '/miterfra
                 }
             });
 
-            const fetchByGlobalId = await fetch(`${apiEndpoint}/organizations/2/projects/6/tasks/by-external-id/${globalId}`, {
-                headers: {
-                    Authorization: 'Bearer ' + token
-                }
-            });
-
-            if (fetchAction.status === 404 && fetchByGlobalId === 404) {
+            if (fetchAction.status === 404) {
                 const createAction = await fetch(`${apiEndpoint}/organizations/2/projects/6/tasks`, {
                     method: 'POST',
                     headers: {
