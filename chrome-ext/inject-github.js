@@ -112,16 +112,22 @@ if (location.origin === 'https://github.com' && location.pathname === '/miterfra
         elIssues.forEach(async (elIssue) => {
             const elInjectContainer = elIssue.querySelector('div>div:nth-child(3)');
             const elLink = elIssue.querySelector('div>a');
-            const newExternalId = elLink.id.split('_')[1];
-            // const oldExternalId = elIssue.dataset[`${variablePrefix}taskId`];
-            // console.log(elIssue.dataset);
-            const id = elIssue.dataset.id;
+            const id = elLink.id.split('_')[1];
+            const globalId = elIssue.dataset.id;
+
             let fetchAction = await fetch(`${apiEndpoint}/organizations/2/projects/6/tasks/by-external-id/${id}`, {
                 headers: {
                     Authorization: 'Bearer ' + token
                 }
             });
-            if (fetchAction.status === 404) {
+
+            const fetchByGlobalId = await fetch(`${apiEndpoint}/organizations/2/projects/6/tasks/by-external-id/${globalId}`, {
+                headers: {
+                    Authorization: 'Bearer ' + token
+                }
+            });
+
+            if (fetchAction.status === 404 && fetchByGlobalId === 404) {
                 const createAction = await fetch(`${apiEndpoint}/organizations/2/projects/6/tasks`, {
                     method: 'POST',
                     headers: {
