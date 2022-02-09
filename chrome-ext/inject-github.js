@@ -82,7 +82,7 @@ if (!window.Homo) {
 if (location.origin === 'https://github.com' && location.pathname === '/miterfrants/itemhub/issues') {
     (async () => {
         // add coins
-        const variablePrefix = 'homo.bargainingChip.';
+        const variablePrefix = 'homo.bet.';
         const token = window[`${variablePrefix}token`];
         const userId = window[`${variablePrefix}userId`];
         const name = window[`${variablePrefix}name`];
@@ -110,6 +110,11 @@ if (location.origin === 'https://github.com' && location.pathname === '/miterfra
 
         const elIssues = document.querySelectorAll('[aria-label="Issues"] > div > div');
         elIssues.forEach(async (elIssue) => {
+            const elInjectContainer = elIssue.querySelector('div>div:nth-child(3)');
+            const elLink = elIssue.querySelector('div>a');
+            const newExternalId = elLink.id.split('_')[1];
+            // const oldExternalId = elIssue.dataset[`${variablePrefix}taskId`];
+            // console.log(elIssue.dataset);
             const id = elIssue.dataset.id;
             let fetchAction = await fetch(`${apiEndpoint}/organizations/2/projects/6/tasks/by-external-id/${id}`, {
                 headers: {
@@ -162,17 +167,58 @@ if (location.origin === 'https://github.com' && location.pathname === '/miterfra
             if (elIssue.querySelectorAll('.buttons').length === 0) {
                 const elButtons = document.createElement('div');
                 elButtons.classList.add('buttons');
+                elButtons.classList.add('mt-2');
+                elButtons.style.alignItems = 'center';
                 elButtons.innerHTML = `
-                    <button class="d-none homo-bargaining-add px-3 py-1">+</button>
-                    <span class="your-bet"></span>
-                    <button class="d-none homo-bargaining-minus ml-3 px-3 py-1">-</button>
-                    <button class="btn-claim d-none">Claim</button>
-                    <div class="assignee d-none"></div>
-                    <div class="exptected-finish-at d-none"></div>
-                    <button class="d-none btn-mark-finish">Mark Finish</button>
-                    <button class="d-none btn-done">Done</button>
+                    <style>
+                        .homo-btn {
+                            background: none;
+                            border: 1px solid #cfd98c;
+                            height: 30px;
+                            border-radius: 10px;
+                            color: #cfd98c;
+                            display: inline-flex;
+                            align-items: center;
+                        }
+                        .p-25 {
+                            padding: 13px !important;
+                        }
+                    </style>
+                    <div class="d-flex" style="align-items: center">
+                        <button class="d-none homo-bargaining-add p-25" style="background: transparent; width: 50px; height: 50px; object-fit: cover; border: none;">
+                            <img src="https://bet.homo.tw/assets/imgs/add.png" style="width: 100%; height: 100%;" />
+                        </button>
+                        <span class="your-bet"></span>
+                        <button class="d-none homo-bargaining-minus ml-3 p-25" style="background: transparent; width: 50px; height: 50px; object-fit: cover; border: none;">
+                            <img src="https://bet.homo.tw/assets/imgs/minus.png" style="width: 100%; height: 100%;" />
+                        </button>
+                        <button class="btn-claim d-none homo-btn ml-4">
+                            <div class="d-flex position-relative px-2">
+                                <div class="p-1" style="position: absolute; height: 50px; width: 50px; object-fit: cover; top: -27px; left: -10px;">
+                                    <img src="https://bet.homo.tw/assets/imgs/hand-up.png" style="width: 100%; height: 100%;" />
+                                </div>
+                                <div class="ml-5">Claim</div>
+                            </div>
+                        </button>
+                        <button class="d-none btn-mark-finish text-sm d-inline-flex homo-btn ml-4 px-3">
+                            <div class="p-1" style="position: relative; height: 40px; width: 40px; object-fit: cover; transform: translate(0, -8px)">
+                                <img src="https://bet.homo.tw/assets/imgs/verify.png" style="left: 0; width: 100%; height: 100%; position: absolute" />
+                            </div>
+                            <div class="ml-2">Mark Finish</div>
+                        </button>
+                        <button class="d-none btn-done homo-btn text-sm ml-4 px-3">
+                            <div class="p-1" style="position: relative; height: 30px; width: 30px; object-fit: cover; transform: translate(0, -8px)">
+                                <img src="https://bet.homo.tw/assets/imgs/done.png" style="left: 0; width: 100%; height: 100%; position: absolute" />
+                            </div>
+                            <div class="ml-2">Done</div>
+                        </button>
+                    </div>
+                    <div class="d-flex">
+                        <div class="assignee" style="color: #cfd98c;"></div>
+                        <div class="exptected-finish-at ml-3" style="color: #cfd98c;"></div>
+                    </div>
                 `;
-                elIssue.append(elButtons);
+                elInjectContainer.append(elButtons);
             }
 
             if (resp.assigneeId) {

@@ -49,12 +49,12 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 function injectGithub (tabId, userId, name, token, earnCoins, betCoins) {
     chrome.tabs.executeScript(tabId, {
         code: `
-      window['homo.bargainingChip.token'] = '${token}';
-      window['homo.bargainingChip.earnCoins'] = ${earnCoins};
-      window['homo.bargainingChip.betCoins'] = ${betCoins};
-      window['homo.bargainingChip.userId'] = ${userId};
-      window['homo.bargainingChip.apiEndpoint'] = '${API.ENDPOINT}';
-      window['homo.bargainingChip.name'] = '${name}';
+      window['homo.bet.token'] = '${token}';
+      window['homo.bet.earnCoins'] = ${earnCoins};
+      window['homo.bet.betCoins'] = ${betCoins};
+      window['homo.bet.userId'] = ${userId};
+      window['homo.bet.apiEndpoint'] = '${API.ENDPOINT}';
+      window['homo.bet.name'] = '${name}';
     `
     }, function () {
         chrome.tabs.executeScript(tabId, { file: '/inject-github.js' });
