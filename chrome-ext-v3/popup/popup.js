@@ -1,3 +1,4 @@
+import { RESPONSE_STATUS } from '../config.js';
 import {
     Data
 } from '../popup/data.js';
@@ -100,6 +101,13 @@ document.querySelector('.confirm .minus').addEventListener('click', async (e) =>
 
 document.querySelector('.confirm .btn-buy').addEventListener('click', (e) => {
     const elConfirm = e.currentTarget.parentNode.parentNode;
-    console.log({ action: 'buy', good: elConfirm.dataset.name, value: Number(elConfirm.dataset.value) });
-    chrome.runtime.sendMessage({ action: 'buy', good: elConfirm.dataset.name, value: Number(elConfirm.dataset.value) });
+    chrome.runtime.sendMessage({ action: 'buy', name: elConfirm.dataset.name, value: Number(elConfirm.dataset.value) }, (resp) => {
+        if (resp.status === RESPONSE_STATUS.OK) {
+            alert('購買成功');
+            elConfirm.parentNode.classList.remove('confirm');
+            init();
+        } else {
+            alert('發生錯誤');
+        }
+    });
 });

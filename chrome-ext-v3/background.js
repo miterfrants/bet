@@ -42,7 +42,7 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
         });
     } else if (req.action === 'buy') {
         chrome.storage.sync.get(['token']).then(storage => {
-            buy(storage.token, req.good, sendResponse);
+            buy(storage.token, req.name, req.value, sendResponse);
         });
     }
     return true;
@@ -56,15 +56,15 @@ function debounceUpdateCoinLog (token, externalId, freeCoins, betCoins, callback
     }, 2000);
 }
 
-async function buy (token, good, value, callback) {
-    const resp = await fetch(`${API.ENDPOINT}/organizations/2/goods`, {
+async function buy (token, name, value, callback) {
+    const resp = await fetch(`${API.ENDPOINT}/goods/buy`, {
         method: 'POST',
         headers: {
             Authorization: 'Bearer ' + token,
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            good,
+            name,
             value
         })
     });

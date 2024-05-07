@@ -41,8 +41,11 @@ namespace Homo.Bet.Api
             // lock coin log
             CoinsLogDataService.LockBetted(_dbContext);
             // give new coins
-            List<long> userIds = UserDataservice.GetAllByIds(null, _dbContext).Select(x => x.Id).ToList<long>();
-            CoinsLogDataService.Give(_dbContext, userIds, 10);
+            UserDataservice.GetAllByIds(null, _dbContext).Select(x => x.Id).ToList<long>().ForEach(userId =>
+            {
+                int rewardCoin = RewardDataService.GetRewardCoinPerWeek(_dbContext, userId);
+                CoinsLogDataService.Give(_dbContext, new List<long> { userId }, 10 + rewardCoin);
+            });
             return System.Threading.Tasks.Task.CompletedTask;
         }
 

@@ -107,6 +107,7 @@ button {
     display: block;
 }
 .d-flex { display: flex; }
+.d-none { display: none !important;}
 .align-items-center { align-items: center; }
 .align-items-top { align-items: top;}
 .justify-content-between { justify-content: space-between; }

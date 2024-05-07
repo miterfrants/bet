@@ -23,6 +23,7 @@ namespace Homo.Bet.Api
         public virtual DbSet<Project> Project { get; set; }
         public virtual DbSet<Task> Task { get; set; }
         public virtual DbSet<CoinLog> CoinLog { get; set; }
+        public virtual DbSet<Reward> Reward { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -108,6 +109,12 @@ namespace Homo.Bet.Api
                 entity.HasIndex(p => new { p.TaskId });
                 entity.HasIndex(p => new { p.IsLock });
                 entity.HasOne(p => p.Task).WithMany().HasForeignKey(p => p.TaskId);
+            });
+
+            modelBuilder.Entity<Reward>(entity =>
+            {
+                entity.HasIndex(p => new { p.DeletedAt });
+                entity.HasIndex(p => new { p.Type });
             });
         }
 
