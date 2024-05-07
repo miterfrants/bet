@@ -1,6 +1,6 @@
 import {
-    RESPONSE_STATUS,
-    API
+    API,
+    RESPONSE_STATUS
 } from './config.js';
 
 import {

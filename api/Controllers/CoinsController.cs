@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Homo.Bet.Api
 {
-    [Route("v1/coins")]
+    [Route("v1")]
     [AuthorizeFactory]
     public class CoinsController : ControllerBase
     {
@@ -14,17 +14,19 @@ namespace Homo.Bet.Api
         }
 
         [HttpGet]
-        [Route("earn")]
+        [Route("coins/earn")]
         public dynamic getEarnCoins(DTOs.JwtExtraPayload extraPayload)
         {
             return new { Qty = CoinsLogDataService.GetEarnCoins(_dbContext, extraPayload.Id) };
         }
 
         [HttpGet]
-        [Route("bet")]
+        [Route("coins/bet")]
         public dynamic getBetCoins(DTOs.JwtExtraPayload extraPayload)
         {
             return new { Qty = CoinsLogDataService.GetBetCoins(_dbContext, extraPayload.Id) };
         }
+
+
     }
 }

@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <PackageType>Template</PackageType>
     <PackageId>Homo.Bet.Api</PackageId>
-    <VersionPrefix>5.0.0</VersionPrefix>
+    <VersionPrefix>6.0.0</VersionPrefix>
     <VersionSuffix>alpha.12</VersionSuffix>
     <PackageTags>dotnet-new;templates;api</PackageTags>
     <Title>Homo Bet Api</Title>

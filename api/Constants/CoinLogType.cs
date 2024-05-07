@@ -6,6 +6,8 @@ namespace Homo.Bet.Api
         [Description("Earn")]
         EARN,
         [Description("Bet")]
-        BET
+        BET,
+        [Description("Buy")]
+        BUY
     }
 }

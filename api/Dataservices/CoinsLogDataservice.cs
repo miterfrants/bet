@@ -13,15 +13,16 @@ namespace Homo.Bet.Api
                 .Where(x =>
                     x.DeletedAt == null
                     && x.OwnerId == userId
-                    && x.Type == COIN_LOG_TYPE.EARN
+                    && (x.Type == COIN_LOG_TYPE.EARN || x.Type == COIN_LOG_TYPE.BUY)
                 )
-                .GroupBy(x => x.OwnerId)
+                .GroupBy(x => new { x.OwnerId, x.Type })
                 .Select(g => new
                 {
-                    g.Key,
+                    g.Key.OwnerId,
+                    g.Key.Type,
                     Qty = g.Sum(x => x.Qty)
                 })
-                .Sum(x => x.Qty);
+                .Sum(x => x.Type == COIN_LOG_TYPE.EARN ? x.Qty : -x.Qty);
         }
 
         public static int GetBetCoins(BargainingChipDBContext dbContext, long userId)
@@ -146,7 +147,7 @@ namespace Homo.Bet.Api
                 .ToList();
         }
 
-        public static CoinLog Create(BargainingChipDBContext dbContext, long ownerId, long taskId, long createdBy, COIN_LOG_TYPE type, DTOs.CoinLog dto)
+        public static CoinLog Create(BargainingChipDBContext dbContext, long ownerId, long? taskId, long createdBy, COIN_LOG_TYPE type, DTOs.CoinLog dto)
         {
             CoinLog record = new CoinLog();
             foreach (var propOfDTO in dto.GetType().GetProperties())

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Auth</title>
+    <link href="/common.css" rel="stylesheet">
+    <link href="/popup/popup.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="auth">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <div class="profile">
+                    <img />
+                </div>
+                <div class="name"></div>
+            </div>
+            <div class="d-flex align-items-center">
+                投注:
+                <div class="bet-coins pad-l-5"></div>
+                <span class="pad-l-5">X</span>
+                <img class="coin pad-l-5" src="/imgs/coin.png" />
+            </div>
+            <div class="d-flex align-items-center">
+                存款:
+                <div class="earn-coins pad-l-5"></div>
+                <span class="pad-l-5">X</span>
+                <img class="coin pad-l-5" src="/imgs/coin.png" />
+            </div>
+        </div>
+        <button class="sync-git-hub-issue pad-t-10">
+            Sync Github Issue
+        </button>
+
+        <div class="store">
+            <h1 class="marg-b-0">Store</h1>
+            <div class="runway d-flex flex-nowrap align-items-top">
+                <div class="w-50 flex-shrink-0">
+                    <h3 class="good d-flex justify-content-between align-items-center">
+                        <div data-cost="10" data-name="股票" data-template="股票 + {number}" class="good">股票 + 1</div>
+                        <div className="d-flex align-items-center">
+                            10 X <img class="coin pad-l-5" src="/imgs/coin.png" />
+                            <button>購買</button>
+                        </div>
+                    </h3>
+                    <h3 class="good d-flex justify-content-between align-items-center">
+                        <div data-cost="50" data-name="假期" data-template="假期 {number} 天" class="good">假期 1 天</div>
+                        <div className="d-flex align-items-center">
+                            50 X <img class="coin pad-l-5" src="/imgs/coin.png" />
+                            <button>購買</button>
+                        </div>
+                    </h3>
+                    <h3 class="good d-flex justify-content-between align-items-center">
+                        <div data-cost="100" data-name="每週取得" data-template="每週取得 Coin 數量 + {number}" class="good">每週取得
+                            Coin 數量 + 1</div>
+                        <div className="d-flex align-items-center">
+                            100 X <img class="coin pad-l-5" src="/imgs/coin.png" />
+                            <button>購買</button>
+                        </div>
+                    </h3>
+                </div>
+                <div data-name="" class="confirm w-50 pad-l-20 flex-shrink-0">
+                    <div class="d-flex good-warp justify-content-between">
+                        <button class="minus">
+                            <img src="/imgs/dash-circle.png" />
+                        </button>
+                        <h2></h2>
+                        <button class="add">
+                            <img src="/imgs/plus-circle.png" />
+                        </button>
+                    </div>
+                    <h3 class="warning">
+                        請再次確認是否要購買，購買後無法還原
+                    </h3>
+                    <div class="d-flex justify-content-between">
+                        <button class="btn-cancel-confirm marg-l-0">取消</button>
+                        <button class="btn-buy">確認</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="unauth">
+        <button class="auth-google d-block">
+            使用 Google 登入
+        </button>
+    </div>
+
+    <script type="module" src="popup.js"></script>
+</body>
+
+</html>
