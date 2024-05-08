@@ -8,6 +8,8 @@ namespace Homo.Bet.Api
         [Description("Bet")]
         BET,
         [Description("Buy")]
-        BUY
+        BUY,
+        [Description("Transfer To")]
+        TRANSFER_TO
     }
 }

@@ -13,7 +13,7 @@ namespace Homo.Bet.Api
                 .Where(x =>
                     x.DeletedAt == null
                     && x.OwnerId == userId
-                    && (x.Type == COIN_LOG_TYPE.EARN || x.Type == COIN_LOG_TYPE.BUY)
+                    && (x.Type == COIN_LOG_TYPE.EARN || x.Type == COIN_LOG_TYPE.BUY || x.Type == COIN_LOG_TYPE.TRANSFER_TO)
                 )
                 .GroupBy(x => new { x.OwnerId, x.Type })
                 .Select(g => new
@@ -227,6 +227,30 @@ namespace Homo.Bet.Api
                 };
                 dbContext.CoinLog.Add(log);
             }
+            dbContext.SaveChanges();
+        }
+        public static void Transfer(BargainingChipDBContext dbContext, long ownerId, long receiverId, int qty)
+        {
+            CoinLog from = new CoinLog()
+            {
+                Type = COIN_LOG_TYPE.TRANSFER_TO,
+                OwnerId = ownerId,
+                CreatedAt = DateTime.Now,
+                CreatedBy = ownerId,
+                Qty = qty
+            };
+            dbContext.CoinLog.Add(from);
+
+            CoinLog to = new CoinLog()
+            {
+                Type = COIN_LOG_TYPE.EARN,
+                OwnerId = receiverId,
+                CreatedAt = DateTime.Now,
+                CreatedBy = ownerId,
+                Qty = qty
+            };
+            dbContext.CoinLog.Add(to);
+
             dbContext.SaveChanges();
         }
     }

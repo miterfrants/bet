@@ -95,10 +95,14 @@ button {
 .marg-b-0 {
     margin-bottom: 0;
 }
+.marg-b-10 {
+    margin-bottom: 10px;
+}
 
 .marg-l-5 {
     margin-left: 5px;
 }
+
 .marg-l-0 {
     margin-left: 0 !important;
 }
