@@ -192,7 +192,6 @@ const injectIssueButton = async (elIssue) => {
                             elIssue.querySelector('.homo-bargaining-minus').classList.add('d-none');
                             elIssue.querySelector('.assignee').classList.remove('d-none');
                             chrome.storage.sync.get(['userInfo']).then((storage) => {
-                                console.log(storage.userInfo);
                                 elIssue.querySelector('.assignee').innerHTML = `${storage.userInfo.lastName}${storage.userInfo.firstName}`;
                             });
                             elIssue.querySelector('.exptected-finish-at').classList.remove('d-none');

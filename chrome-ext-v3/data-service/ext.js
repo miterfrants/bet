@@ -38,7 +38,6 @@ const _fetch = (url, option, withCatch) => {
     if (option.cache) {
         console.warn('Cound not declate cache in option params');
     }
-    console.log(url);
     const newOption = {
         ...option,
         headers: {

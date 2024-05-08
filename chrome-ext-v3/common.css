@@ -119,7 +119,10 @@ button {
 .w-50 { width: 50% }
 .flex-nowrap {}
 .flex-shrink-0 { flex-shrink: 0; }
-.runway { width: calc(100% * 2); transition: transform 0.3s; }
-.runway.confirm { transform: translateX(calc(-50% - 20px)); }
-.store button { border: 1px solid #fac32d; padding: 5px 10px; margin-left: 5px; background-color: #e5ac11; border-radius: 4px; }
+.runway, .transfer-viewport { width: calc(100% * 2); transition: transform 0.3s; }
+
+.runway.confirm, .transfer-viewport.confirm { transform: translateX(calc(-50% - 20px)); }
+.store button, .yellow-button { border: 1px solid #fac32d; padding: 5px 10px; margin-left: 5px; background-color: #e5ac11; border-radius: 4px; }
 .good-warp button { background: transparent; border: none;}
+
+select, input { padding: 5px 10px; border-radius: 5px;}

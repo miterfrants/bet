@@ -44,6 +44,10 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
         chrome.storage.sync.get(['token']).then(storage => {
             buy(storage.token, req.name, req.value, sendResponse);
         });
+    } else if (req.action === 'transfer') {
+        chrome.storage.sync.get(['token']).then(storage => {
+            transfer(storage.token, req.receiverId, req.qty, sendResponse);
+        });
     }
     return true;
 });
@@ -54,6 +58,22 @@ function debounceUpdateCoinLog (token, externalId, freeCoins, betCoins, callback
     coinLogUpdateTimerArray[externalId] = setTimeout(async () => {
         await updateCoinLog(token, externalId, freeCoins, betCoins, callback);
     }, 2000);
+}
+
+async function transfer (token, receiverId, qty, callback) {
+    const resp = await fetch(`${API.ENDPOINT}/coins/transfer`, {
+        method: 'POST',
+        headers: {
+            Authorization: 'Bearer ' + token,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            receiverId,
+            qty
+        })
+    });
+    const respOfBuy = await resp.json();
+    callback(respOfBuy);
 }
 
 async function buy (token, name, value, callback) {

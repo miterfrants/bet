@@ -38,13 +38,24 @@
             </div>
         </div>
 
-        <div className="view-port">
-            <div class="info">
-                <h1>Transfer</h1>
-                <select class="receiver">
-
-                </select>
-                <input class="transfer-coins" type="number" />
+        <div>
+            <h1>Transfer</h1>
+            <div class="transfer-viewport d-flex flex-nowrap align-items-top">
+                <div class="w-50 flex-shrink-0">
+                    <div>
+                        <select class="receiver">
+                        </select>
+                        <input class="transfer-coins marg-l-5" type="number" />
+                    </div>
+                    <button disabled class="yellow-button marg-l-0 marg-t-10">Transfer</button>
+                </div>
+                <div class="confirm w-50 pad-l-20 flex-shrink-0">
+                    <h3 class="warning"></h3>
+                    <div class="d-flex justify-content-between">
+                        <button class="yellow-button btn-cancel-confirm marg-l-0">取消</button>
+                        <button class="yellow-button btn-buy">確認</button>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="store">

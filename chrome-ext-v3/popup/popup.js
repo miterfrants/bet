@@ -33,12 +33,11 @@ function init () {
 
             const respOfGetShareholding = await Data.GetShareholding(storage.token);
             const respOfGetCoinsPerWeek = await Data.GetCoinsPerWeek(storage.token);
-            console.log(respOfGetCoinsPerWeek);
             document.querySelector('.shareholding-rate').innerHTML = `${Math.round(respOfGetShareholding.data.shareholding * 10000) / 100} %`;
             document.querySelector('.coins-per-week').innerHTML = respOfGetCoinsPerWeek.data.coinsPerWeek + 10;
 
             const respOfUsers = await Data.GetUsers(storage.token);
-            console.log(respOfUsers);
+            document.querySelector('.receiver').innerHTML = respOfUsers.data.filter(item => item.id !== storage.userInfo.id).map(item => `<option value="${item.id}">${item.username}</option>`).join('');
         }
         UI.Init(storage);
     });
@@ -73,9 +72,31 @@ document.querySelectorAll('.store .good button').forEach(item => {
     });
 });
 
-document.querySelector('.btn-cancel-confirm').addEventListener('click', (e) => {
-    const runway = document.querySelector('.store .runway');
-    runway.classList.remove('confirm');
+document.querySelector('.transfer-coins').addEventListener('keyup', (e) => {
+    if (e.currentTarget.value !== '') {
+        document.querySelector('.transfer-viewport button').removeAttribute('disabled');
+    } else {
+        document.querySelector('.transfer-viewport button').setAttribute('disabled', '');
+    }
+});
+
+document.querySelector('.transfer-viewport button').addEventListener('click', (e) => {
+    const receiverId = document.querySelector('.receiver').value;
+    const receiverName = document.querySelector('.receiver option:checked').innerHTML;
+    const qty = Number(document.querySelector('.transfer-coins').value);
+    const elTransferViewport = document.querySelector('.transfer-viewport');
+    elTransferViewport.classList.add('confirm');
+    const elWarning = elTransferViewport.querySelector('h3');
+    elWarning.innerHTML = `請確認轉帳 $ ${qty} 給 ${receiverName} `;
+    elWarning.dataset.receiverId = receiverId;
+    elWarning.dataset.qty = qty;
+});
+
+document.querySelectorAll('.btn-cancel-confirm').forEach(item => {
+    item.addEventListener('click', (e) => {
+        const runway = e.currentTarget.parentNode.parentNode.parentNode;
+        runway.classList.remove('confirm');
+    });
 });
 
 document.querySelector('.confirm .add').addEventListener('click', async (e) => {
@@ -102,11 +123,25 @@ document.querySelector('.confirm .minus').addEventListener('click', async (e) =>
     elConfirm.dataset.value = value - 1;
 });
 
-document.querySelector('.confirm .btn-buy').addEventListener('click', (e) => {
+document.querySelector('.store .confirm .btn-buy').addEventListener('click', (e) => {
     const elConfirm = e.currentTarget.parentNode.parentNode;
     chrome.runtime.sendMessage({ action: 'buy', name: elConfirm.dataset.name, value: Number(elConfirm.dataset.value) }, (resp) => {
         if (resp.status === RESPONSE_STATUS.OK) {
             alert('購買成功');
+            elConfirm.parentNode.classList.remove('confirm');
+            init();
+        } else {
+            alert('發生錯誤');
+        }
+    });
+});
+
+document.querySelector('.transfer-viewport .confirm .btn-buy').addEventListener('click', (e) => {
+    const elConfirm = e.currentTarget.parentNode.parentNode;
+    const elWarning = elConfirm.querySelector('h3');
+    chrome.runtime.sendMessage({ action: 'transfer', qty: Number(elWarning.dataset.qty), receiverId: Number(elWarning.dataset.receiverId) }, (resp) => {
+        if (resp.status === RESPONSE_STATUS.OK) {
+            alert('轉帳成功');
             elConfirm.parentNode.classList.remove('confirm');
             init();
         } else {
