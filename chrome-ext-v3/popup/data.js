@@ -91,6 +91,52 @@ export const Data = {
             betCoins,
             earnCoins
         });
+    },
+    GetShareholding: async (token) => {
+        const fetchOption = {
+            method: 'GET',
+            headers: {
+                Authorization: 'Bearer ' + token
+            }
+        };
+        const resp = await _fetch(API.COINS_BET, fetchOption);
+        if (resp.status === 200) {
+            const data = await resp.json();
+            return {
+                status: RESPONSE_STATUS.OK,
+                data
+            };
+        } else {
+            return {
+                status: RESPONSE_STATUS.FAILED,
+                data: {
+                    errorMsg: 'get bet coins error'
+                }
+            };
+        }
+    },
+    GetCoinsPerWeek: async (token) => {
+        const fetchOption = {
+            method: 'GET',
+            headers: {
+                Authorization: 'Bearer ' + token
+            }
+        };
+        const resp = await _fetch(API.COINS_PER_WEEK, fetchOption);
+        if (resp.status === 200) {
+            const data = await resp.json();
+            return {
+                status: RESPONSE_STATUS.OK,
+                data
+            };
+        } else {
+            return {
+                status: RESPONSE_STATUS.FAILED,
+                data: {
+                    errorMsg: 'get bet coins error'
+                }
+            };
+        }
     }
 };
 

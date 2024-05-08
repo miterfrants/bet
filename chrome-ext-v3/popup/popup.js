@@ -30,6 +30,11 @@ function init () {
 
             document.querySelector('.auth .profile img').src = storage.userInfo.profile;
             document.querySelector('.auth .name').innerHTML = `${storage.userInfo.lastName}${storage.userInfo.firstName}`;
+
+            const respOfGetShareholding = await Data.GetShareholding(storage.token);
+            const respOfGetCoinsPerWeek = await Data.GetCoinsPerWeek(storage.token);
+            console.log(respOfGetShareholding);
+            console.log(respOfGetCoinsPerWeek);
         }
         UI.Init(storage);
     });
@@ -44,12 +49,6 @@ document.querySelector('.auth-google').addEventListener('click', async () => {
         });
         init();
     } catch (error) {}
-});
-
-document.querySelector('.sync-git-hub-issue').addEventListener('click', async () => {
-    chrome.storage.sync.get(['token', 'userInfo'], async (storage) => {
-        Data.SyncGithub(storage.userInfo.id, `${storage.userInfo.lastName}${storage.userInfo.firstName}`, storage.token, document.querySelector('.bet-coins').innerHTML, document.querySelector('.earn-coins').innerHTML);
-    });
 });
 
 document.querySelectorAll('.store .good button').forEach(item => {
