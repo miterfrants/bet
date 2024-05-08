@@ -99,7 +99,7 @@ export const Data = {
                 Authorization: 'Bearer ' + token
             }
         };
-        const resp = await _fetch(API.COINS_BET, fetchOption);
+        const resp = await _fetch(API.SHAREHOLDING, fetchOption);
         if (resp.status === 200) {
             const data = await resp.json();
             return {

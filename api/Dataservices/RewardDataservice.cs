@@ -27,7 +27,7 @@ namespace Homo.Bet.Api
         public static decimal GetShareholding(BargainingChipDBContext dbContext, long ownerId)
         {
             int totalBuyStock = dbContext.Reward.Where(item => item.DeletedAt == null && item.Type == REWARD_TYPE.STOCK).Sum(item => item.Qty);
-            return dbContext.Reward.Where(item => item.DeletedAt == null && item.CreatedBy == ownerId && item.Type == REWARD_TYPE.STOCK).Sum(item => item.Qty) / totalBuyStock;
+            return totalBuyStock == 0 ? 0 : dbContext.Reward.Where(item => item.DeletedAt == null && item.CreatedBy == ownerId && item.Type == REWARD_TYPE.STOCK).Sum(item => item.Qty) / totalBuyStock;
         }
 
     }
