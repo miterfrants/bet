@@ -1,5 +1,5 @@
-const coinIconHtml = '<div class="overflow-hidden" style="width:20px; height: 20px; margin-left: 10px; margin-right: 10px"><img style="width: 100%; height: 100%; object-fit: contain;" src="https://bet.homo.tw/assets/imgs/coin.png" /> </div> X ';
-const injectHead = (betCoins) => {
+window.coinIconHtml = '<div class="overflow-hidden" style="width:20px; height: 20px; margin-left: 10px; margin-right: 10px"><img style="width: 100%; height: 100%; object-fit: contain;" src="https://bet.homo.tw/assets/imgs/coin.png" /> </div> X ';
+window.injectHead = (betCoins) => {
     const coinIconHtml = '<div class="overflow-hidden" style="width:20px; height: 20px; margin-left: 10px; margin-right: 10px"><img style="width: 100%; height: 100%; object-fit: contain;" src="https://bet.homo.tw/assets/imgs/coin.png" /> </div> X ';
     const elNotification = document.querySelector('notification-indicator');
     const elDetailMenu = document.querySelector('details-menu');
@@ -14,12 +14,12 @@ const injectHead = (betCoins) => {
         elHeaderItemBetIcon.innerHTML = `${coinIconHtml}<span class="homo-bet-coins" style="padding-left:8px;">${betCoins}</span> `;
         elHeaderItemBetIcon.style.whiteSpace = 'nowrap';
         elHeader.insertBefore(elHeaderItemBetIcon, elHeaderItem);
-        elHeaderItemBetIcon.querySelector('.homo-bet-coins').dataset[`${variablePrefix}betCoins`] = betCoins;
+        elHeaderItemBetIcon.querySelector('.homo-bet-coins').dataset[`${window.variablePrefix}betCoins`] = betCoins;
         elHeader.dataset.injected = 'true';
     }
 };
 
-const injectIssueButton = async (elIssue) => {
+window.injectIssueButton = async (elIssue) => {
     const elInjectContainer = elIssue.querySelector('div>div:nth-child(3)');
     const elLink = elIssue.querySelector('div>a');
     const externalId = elLink.id.split('_')[1];
@@ -27,11 +27,11 @@ const injectIssueButton = async (elIssue) => {
     chrome.runtime.sendMessage({ action: 'get-issue-status', externalId }, (issueStatus) => {
         const elTitle = elIssue.querySelector('.markdown-title');
         const qty = issueStatus.ownerLockedBet + issueStatus.ownerFreeBet + issueStatus.excludeOwnerBet;
-        elIssue.dataset[`${variablePrefix}ownerLockedBet`] = issueStatus.ownerLockedBet;
-        elIssue.dataset[`${variablePrefix}ownerFreeBet`] = issueStatus.ownerFreeBet;
-        elIssue.dataset[`${variablePrefix}excludeOwnerBet`] = issueStatus.excludeOwnerBet;
-        elIssue.dataset[`${variablePrefix}currentCoinLogId`] = issueStatus.currentCoinLogId;
-        elIssue.dataset[`${variablePrefix}externalId`] = issueStatus.id;
+        elIssue.dataset[`${window.variablePrefix}ownerLockedBet`] = issueStatus.ownerLockedBet;
+        elIssue.dataset[`${window.variablePrefix}ownerFreeBet`] = issueStatus.ownerFreeBet;
+        elIssue.dataset[`${window.variablePrefix}excludeOwnerBet`] = issueStatus.excludeOwnerBet;
+        elIssue.dataset[`${window.variablePrefix}currentCoinLogId`] = issueStatus.currentCoinLogId;
+        elIssue.dataset[`${window.variablePrefix}externalId`] = issueStatus.id;
         let title = '';
         if (elIssue.dataset.injected !== 'true') {
             elTitle.style.whiteSpace = 'nowrap';
@@ -42,7 +42,7 @@ const injectIssueButton = async (elIssue) => {
             title = elTitle.dataset.title;
         }
 
-        elTitle.innerHTML = `${title} ${coinIconHtml} <span class="subtotal">${qty}</span>`;
+        elTitle.innerHTML = `${title} ${window.coinIconHtml} <span class="subtotal">${qty}</span>`;
         elIssue.classList.add('issue');
 
         if (elIssue.querySelectorAll('.buttons').length === 0) {
@@ -139,21 +139,21 @@ const injectIssueButton = async (elIssue) => {
                     e.stopPropagation();
                     e.preventDefault();
                     const elIssue = e.currentTarget.closest('.issue');
-                    let ownerFreeBet = Number(elIssue.dataset[`${variablePrefix}ownerFreeBet`]);
+                    let ownerFreeBet = Number(elIssue.dataset[`${window.variablePrefix}ownerFreeBet`]);
                     const elBetCoins = document.querySelector('.homo-bet-coins');
-                    let betCoins = Number(elBetCoins.dataset[`${variablePrefix}betCoins`]);
+                    let betCoins = Number(elBetCoins.dataset[`${window.variablePrefix}betCoins`]);
                     if (betCoins <= 0) {
                         return;
                     }
                     ownerFreeBet += 1;
                     betCoins -= 1;
-                    const ownerLockedBet = Number(elIssue.dataset[`${variablePrefix}ownerLockedBet`]);
-                    const excludeOwnerBet = Number(elIssue.dataset[`${variablePrefix}excludeOwnerBet`]);
-                    elIssue.dataset[`${variablePrefix}ownerFreeBet`] = ownerFreeBet;
-                    elBetCoins.dataset[`${variablePrefix}betCoins`] = betCoins;
+                    const ownerLockedBet = Number(elIssue.dataset[`${window.variablePrefix}ownerLockedBet`]);
+                    const excludeOwnerBet = Number(elIssue.dataset[`${window.variablePrefix}excludeOwnerBet`]);
+                    elIssue.dataset[`${window.variablePrefix}ownerFreeBet`] = ownerFreeBet;
+                    elBetCoins.dataset[`${window.variablePrefix}betCoins`] = betCoins;
                     elBetCoins.innerHTML = betCoins;
                     elIssue.querySelector('.subtotal').innerHTML = ownerFreeBet + ownerLockedBet + excludeOwnerBet;
-                    const externalId = Number(elIssue.dataset[`${variablePrefix}externalId`]);
+                    const externalId = Number(elIssue.dataset[`${window.variablePrefix}externalId`]);
                     chrome.runtime.sendMessage({ action: 'update-coin', externalId, freeCoins: ownerFreeBet, betCoins });
                 });
 
@@ -161,27 +161,27 @@ const injectIssueButton = async (elIssue) => {
                     e.stopPropagation();
                     e.preventDefault();
                     const elIssue = e.currentTarget.closest('.issue');
-                    let ownerFreeBet = Number(elIssue.dataset[`${variablePrefix}ownerFreeBet`]);
+                    let ownerFreeBet = Number(elIssue.dataset[`${window.variablePrefix}ownerFreeBet`]);
                     const elBetCoins = document.querySelector('.homo-bet-coins');
-                    let betCoins = Number(elBetCoins.dataset[`${variablePrefix}betCoins`]);
+                    let betCoins = Number(elBetCoins.dataset[`${window.variablePrefix}betCoins`]);
                     if (ownerFreeBet <= 0) {
                         return;
                     }
                     ownerFreeBet -= 1;
                     betCoins += 1;
-                    const ownerLockedBet = Number(elIssue.dataset[`${variablePrefix}ownerLockedBet`]);
-                    const excludeOwnerBet = Number(elIssue.dataset[`${variablePrefix}excludeOwnerBet`]);
-                    elIssue.dataset[`${variablePrefix}ownerFreeBet`] = ownerFreeBet;
-                    elBetCoins.dataset[`${variablePrefix}betCoins`] = betCoins;
+                    const ownerLockedBet = Number(elIssue.dataset[`${window.variablePrefix}ownerLockedBet`]);
+                    const excludeOwnerBet = Number(elIssue.dataset[`${window.variablePrefix}excludeOwnerBet`]);
+                    elIssue.dataset[`${window.variablePrefix}ownerFreeBet`] = ownerFreeBet;
+                    elBetCoins.dataset[`${window.variablePrefix}betCoins`] = betCoins;
                     elBetCoins.innerHTML = betCoins;
                     elIssue.querySelector('.subtotal').innerHTML = ownerFreeBet + ownerLockedBet + excludeOwnerBet;
-                    const externalId = Number(elIssue.dataset[`${variablePrefix}externalId`]);
+                    const externalId = Number(elIssue.dataset[`${window.variablePrefix}externalId`]);
                     chrome.runtime.sendMessage({ action: 'update-coin', externalId, freeCoins: ownerFreeBet, betCoins });
                 });
 
                 elIssue.querySelector('.btn-claim').addEventListener('click', (e) => {
                     const elIssue = e.currentTarget.closest('.issue');
-                    const externalId = Number(elIssue.dataset[`${variablePrefix}externalId`]);
+                    const externalId = Number(elIssue.dataset[`${window.variablePrefix}externalId`]);
                     const days = prompt('預計完成的時間 days');
                     if (isNaN(days)) {
                         alert('為填入預計完成時間');
@@ -206,7 +206,7 @@ const injectIssueButton = async (elIssue) => {
 
                 elIssue.querySelector('.btn-mark-finish').addEventListener('click', (e) => {
                     const elIssue = e.currentTarget.closest('.issue');
-                    const externalId = Number(elIssue.dataset[`${variablePrefix}externalId`]);
+                    const externalId = Number(elIssue.dataset[`${window.variablePrefix}externalId`]);
                     chrome.runtime.sendMessage({ action: 'mark-finish', externalId }, (resp) => {
                         if (resp.status && resp.status === 'OK') {
                             elIssue.querySelector('.btn-mark-finish').classList.add('d-none');
@@ -218,7 +218,7 @@ const injectIssueButton = async (elIssue) => {
 
                 elIssue.querySelector('.btn-done').addEventListener('click', (e) => {
                     const elIssue = e.currentTarget.closest('.issue');
-                    const externalId = Number(elIssue.dataset[`${variablePrefix}externalId`]);
+                    const externalId = Number(elIssue.dataset[`${window.variablePrefix}externalId`]);
                     chrome.runtime.sendMessage({ action: 'done', externalId }, (resp) => {
                         if (resp.status && resp.status === 'OK') {
                             elIssue.querySelector('.btn-done').classList.add('d-none');
@@ -233,14 +233,14 @@ const injectIssueButton = async (elIssue) => {
     });
 };
 
-const variablePrefix = 'homo.bet.';
+window.variablePrefix = 'homo.bet.';
 if (location.origin === 'https://github.com' && location.pathname === '/miterfrants/itemhub/issues') {
     (async () => {
         const storage = await chrome.storage.sync.get(['token', 'userInfo', 'earnCoins', 'betCoins']);
-        injectHead(storage.betCoins);
+        window.injectHead(storage.betCoins);
         const elIssues = document.querySelectorAll('[aria-label="Issues"] > div > div');
         elIssues.forEach(async (elIssue) => {
-            injectIssueButton(elIssue);
+            window.injectIssueButton(elIssue);
         });
     })();
 }

@@ -8,17 +8,18 @@ const API = {
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (changeInfo.status === 'complete' &&
-        (
             tab.url === 'https://github.com/miterfrants/itemhub/issues'
-        )
     ) {
-        injectGithub();
+        console.log('index github', tab.url, tab.id);
+        chrome.scripting.executeScript({
+            target: { tabId },
+            files: ['inject-github.js']
+        });
     }
 });
+
 chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
-    if (req.isSyncGithub) {
-        injectGithub();
-    } else if (req.action === 'get-issue-status') {
+    if (req.action === 'get-issue-status') {
         chrome.storage.sync.get(['token']).then(storage => {
             getIssueStatus(storage.token, req.externalId).then(issueStatus => {
                 sendResponse(issueStatus);
@@ -184,15 +185,4 @@ async function getIssueStatus (token, externalId) {
         });
         return await respOfNewIssue.json();
     }
-}
-
-async function injectGithub () {
-    const tabs = await chrome.tabs.query({ currentWindow: true, active: true });
-    if (tabs.length === 0) {
-        return;
-    }
-    await chrome.scripting.executeScript({
-        target: { tabId: tabs[0].id },
-        files: ['inject-github.js']
-    });
 }
