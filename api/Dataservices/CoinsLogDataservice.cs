@@ -250,7 +250,6 @@ namespace Homo.Bet.Api
                 Qty = qty
             };
             dbContext.CoinLog.Add(to);
-
             dbContext.SaveChanges();
         }
     }

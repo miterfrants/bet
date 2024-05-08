@@ -36,6 +36,9 @@ function init () {
             console.log(respOfGetCoinsPerWeek);
             document.querySelector('.shareholding-rate').innerHTML = `${Math.round(respOfGetShareholding.data.shareholding * 10000) / 100} %`;
             document.querySelector('.coins-per-week').innerHTML = respOfGetCoinsPerWeek.data.coinsPerWeek + 10;
+
+            const respOfUsers = await Data.GetUsers(storage.token);
+            console.log(respOfUsers);
         }
         UI.Init(storage);
     });

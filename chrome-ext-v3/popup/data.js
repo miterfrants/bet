@@ -137,6 +137,29 @@ export const Data = {
                 }
             };
         }
+    },
+    GetUsers: async (token) => {
+        const fetchOption = {
+            method: 'GET',
+            headers: {
+                Authorization: 'Bearer ' + token
+            }
+        };
+        const resp = await _fetch(API.USERS, fetchOption);
+        if (resp.status === 200) {
+            const data = await resp.json();
+            return {
+                status: RESPONSE_STATUS.OK,
+                data
+            };
+        } else {
+            return {
+                status: RESPONSE_STATUS.FAILED,
+                data: {
+                    errorMsg: 'get bet coins error'
+                }
+            };
+        }
     }
 };
 
