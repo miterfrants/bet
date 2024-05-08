@@ -19,7 +19,7 @@ namespace Homo.Bet.Api
         public dynamic getShareholding(DTOs.JwtExtraPayload extraPayload)
         {
 
-            return new { shareholding = RewardDataService.GetShareholding(_dbContext, extraPayload.Id) };
+            return new { all = RewardDataService.GetAllStock(_dbContext), mine = RewardDataService.GetMyStock(_dbContext, extraPayload.Id) };
         }
 
         [HttpGet]
