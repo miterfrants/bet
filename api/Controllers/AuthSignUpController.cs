@@ -175,7 +175,7 @@ namespace Homo.Bet.Api
             await MailHelper.Send(MailProvider.SEND_GRID, new MailTemplate()
             {
                 Subject = _commonLocalizer.Get("verify email"),
-                Content = _commonLocalizer.Get("verify link", null, new Dictionary<string, string>() {
+                Content = _commonLocalizer.Get($"verify link: {code}", null, new Dictionary<string, string>() {
                     { "link", $"{_websiteEndpoint}/auth/verify-email" },
                     { "code", code }
                 })
