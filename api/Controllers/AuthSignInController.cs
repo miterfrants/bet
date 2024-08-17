@@ -52,7 +52,7 @@ namespace Homo.Bet.Api
             return new { status = CUSTOM_RESPONSE.OK };
         }
 
-        [Route("sign-in-with-email")]
+        [Route("sign-in-with-email-in-bet")]
         [HttpPost]
         [Validate]
         public dynamic signInWithEmail([FromBody] DTOs.SignInWithEmail dto)
