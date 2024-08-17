@@ -33,6 +33,13 @@ namespace Homo.Bet.Api
         {
             long ownerId = extraPayload.Id;
             Task task = TaskDataservice.Create(_dbContext, projectId, ownerId, dto);
+            if (ownerId == 7)
+            {
+                CoinsLogDataService.Create(_dbContext, 0, task.Id, ownerId, COIN_LOG_TYPE.BET, new DTOs.CoinLog()
+                {
+                    Qty = 2
+                });
+            }
             return new { Id = task.Id, Qty = 0 };
         }
 
