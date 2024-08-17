@@ -137,7 +137,7 @@ namespace Homo.Bet.Api
             return userPayload;
         }
 
-        [Route("send-verify-email")]
+        [Route("send-verify-email-with-bet")]
         [HttpPost]
         public async Task<dynamic> sendVerifyEmail([FromBody] DTOs.SendValidatedEmail dto)
         {
@@ -183,7 +183,7 @@ namespace Homo.Bet.Api
             return new { status = CUSTOM_RESPONSE.OK };
         }
 
-        [Route("verify-email")]
+        [Route("verify-email-with-bet")]
         [HttpPost]
         public dynamic verifyEmail([FromBody] DTOs.VerifyEmail dto)
         {
