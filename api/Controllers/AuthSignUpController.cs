@@ -53,7 +53,7 @@ namespace Homo.Bet.Api
             _authByCookie = common.AuthByCookie;
         }
 
-        [Route("sign-up")]
+        [Route("sign-up-with-bet")]
         [AuthorizeFactory(AUTH_TYPE.SIGN_UP)]
         [HttpPost]
         public ActionResult<dynamic> signUp([FromBody] DTOs.SignUp dto, DTOs.JwtExtraPayload extraPayload)
