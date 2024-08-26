@@ -33,7 +33,7 @@ function init () {
 
             const respOfGetShareholding = await Data.GetShareholding(storage.token);
             const respOfGetCoinsPerWeek = await Data.GetCoinsPerWeek(storage.token);
-            document.querySelector('.shareholding-rate').innerHTML = `持股: ${respOfGetShareholding.data.mine} 比例: ${Math.round(respOfGetShareholding.data.mine * 10000 / respOfGetShareholding.data.all) / 100} %`;
+            document.querySelector('.shareholding-rate').innerHTML = `${Math.round(respOfGetShareholding.data.shareholding * 10000) / 100} %`;
             document.querySelector('.coins-per-week').innerHTML = respOfGetCoinsPerWeek.data.coinsPerWeek + 10;
 
             const respOfUsers = await Data.GetUsers(storage.token);
