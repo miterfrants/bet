@@ -19,8 +19,9 @@ namespace Homo.Bet.Api
         public string LineClientSecret { get; set; }
         public string SmsUsername { get; set; }
         public string SmsPassword { get; set; }
-
-
+        public string GitHubToken { get; set; }
+        public string LineToken { get; set; }
+        public string LineGroupId { get; set; }
     }
 
     public class Common : Homo.Api.ICommon

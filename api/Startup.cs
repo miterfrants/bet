@@ -68,11 +68,11 @@ namespace Homo.Bet.Api
             var secrets = (Homo.Bet.Api.Secrets)appSettings.Secrets;
             services.AddDbContext<BargainingChipDBContext>(options => options.UseMySql(secrets.DBConnectionString, serverVersion));
             services.AddControllers();
-            // services.AddCronJob<GitHubIssuesNotificationCronJob>(c =>
-            // {
-            //     c.TimeZoneInfo = TimeZoneInfo.Local;
-            //     c.CronExpression = @"* * * * *";
-            // });
+            services.AddCronJob<GitHubIssuesNotificationCronJob>(c =>
+            {
+                c.TimeZoneInfo = TimeZoneInfo.Local;
+                c.CronExpression = @"0 8,16 * * *";
+            });
             services.AddCronJob<RenewCoinLog>(c =>
             {
                 c.TimeZoneInfo = TimeZoneInfo.Local;
