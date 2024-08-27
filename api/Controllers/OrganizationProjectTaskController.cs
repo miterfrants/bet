@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using Homo.Core;
+using Homo.Core.Constants;
 
 namespace Homo.Bet.Api
 {
@@ -32,6 +33,11 @@ namespace Homo.Bet.Api
         public ActionResult<dynamic> create([FromRoute] long organizationId, [FromRoute] long projectId, [FromBody] DTOs.Task dto, Homo.Bet.Api.DTOs.JwtExtraPayload extraPayload)
         {
             long ownerId = extraPayload.Id;
+            var existsTask = TaskDataservice.GetOneByExternalId(_dbContext, projectId, dto.ExternalId);
+            if (existsTask != null)
+            {
+                throw new CustomException(ERROR_CODE.TASK_EXISTS, System.Net.HttpStatusCode.BadRequest);
+            }
             Task task = TaskDataservice.Create(_dbContext, projectId, ownerId, dto);
             if (ownerId == 7)
             {

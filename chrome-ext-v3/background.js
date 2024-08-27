@@ -8,7 +8,7 @@ const API = {
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (changeInfo.status === 'complete' &&
-            tab.url === 'https://github.com/miterfrants/itemhub/issues'
+            tab.url.startsWith('https://github.com/homo-tw/itemhub/issues')
     ) {
         console.log('index github', tab.url, tab.id);
         chrome.scripting.executeScript({

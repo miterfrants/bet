@@ -234,7 +234,7 @@ window.injectIssueButton = async (elIssue) => {
 };
 
 window.variablePrefix = 'homo.bet.';
-if (location.origin === 'https://github.com' && location.pathname === '/miterfrants/itemhub/issues') {
+if (location.origin === 'https://github.com' && location.pathname === '/homo-tw/itemhub/issues') {
     (async () => {
         const storage = await chrome.storage.sync.get(['token', 'userInfo', 'earnCoins', 'betCoins']);
         window.injectHead(storage.betCoins);

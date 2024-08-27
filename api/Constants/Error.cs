@@ -21,6 +21,7 @@ namespace Homo.Bet.Api
         public static string ASSIGNEE_NOT_ALLOW_APPROVE = "ASSIGNEE_NOT_ALLOW_APPROVE";
         public static string NOT_ASSIGNEE = "NOT_ASSIGNEE";
         public static string TASK_STATUS_ERROR = "TASK_STATUS_ERROR";
+        public static string TASK_EXISTS = "TASK_EXISTS";
 
     }
 }

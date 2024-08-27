@@ -25,6 +25,7 @@ namespace Homo.Bet.Api
         public static List<Task> GetAll(BargainingChipDBContext dbContext, long organizationId, long projectId, string name, List<long> ids, List<string> externalIds)
         {
             return dbContext.Task
+                .Include(item => item.Assignee)
                 .Where(x =>
                     x.DeletedAt == null
                     && x.ProjectId == projectId
