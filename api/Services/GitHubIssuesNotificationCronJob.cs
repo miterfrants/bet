@@ -90,14 +90,14 @@ namespace Homo.Bet.Api
                         var unClaimMessage = asigneeUnClaimIssues.Count() > 0 ? $"\n\n未認領的 Issues: \n--------------------\n\n {string.Join("", asigneeUnClaimIssues.Select(issue => $"{issue.title} \n{issue.url} \n\n").ToList())}" : "";
 
                         var thisWeekIssues = issues.Where(item => item.assignee == asignee && item.status == "This Week").ToList();
-                        var thisWeekMessage = thisWeekIssues.Count() > 0 ? $"\n\n這週待處理事項: \n--------------------\n\n{string.Join("\n\n", thisWeekIssues.Select(item => $"{item.title} \n{item.url}"))}" : "";
+                        var thisWeekMessage = thisWeekIssues.Count() > 0 ? $"\n\n這週待處理事項: \n--------------------\n\n {string.Join("", thisWeekIssues.Select(item => $"{item.title} \n{item.url} \n\n"))}" : "";
 
                         var diffAsigneeIssues = issues.Where(item =>
                         {
                             var matchedBetTask = betTasks.Where(task => task.ExternalId == (string)item.id).FirstOrDefault();
-                            return item.assignee != matchedBetTask?.Assignee?.Username && matchedBetTask?.Assignee != null && item.assignee != null;
+                            return item.assignee == asignee && item.assignee != matchedBetTask?.Assignee?.Username && matchedBetTask?.Assignee != null && item.assignee != null;
                         }).ToList();
-                        var reviewMessage = diffAsigneeIssues.Count() > 0 ? $"\n\n需要 Review 的 Issues: \n--------------------\n\n{string.Join("\n\n", diffAsigneeIssues.Select(item => $"{item.title} \n{item.url}"))}" : "";
+                        var reviewMessage = diffAsigneeIssues.Count() > 0 ? $"\n\n需要 Review 的 Issues: \n--------------------\n\n{string.Join("", diffAsigneeIssues.Select(item => $"{item.title} \n{item.url} \n\n"))}" : "";
                         if (string.IsNullOrEmpty(unClaimMessage) && string.IsNullOrEmpty(thisWeekMessage) && string.IsNullOrEmpty(reviewMessage))
                         {
                             _logger.LogInformation(asignee);
