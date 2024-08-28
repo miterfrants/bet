@@ -103,8 +103,11 @@ namespace Homo.Bet.Api
                             _logger.LogInformation(asignee);
                             return;
                         }
+
+                        var inProgressIssues = issues.Where(item => item.assignee == asignee && item.status == "In Progress").ToList();
+                        var inProgressMessage = inProgressIssues.Count() > 0 ? $"\n\n正在執行的任務: \n--------------------\n\n {string.Join("", inProgressIssues.Select(item => $"{item.title} \n{item.url} \n\n"))}" : "";
                         isRock.LineBot.Utility.PushMessage(_appSettings.Secrets.LineGroupId,
-                            $"{asignee}{unClaimMessage}{thisWeekMessage}{reviewMessage}"
+                            $"{asignee}{unClaimMessage}{thisWeekMessage}{reviewMessage}{inProgressMessage}"
                             , _appSettings.Secrets.LineToken);
                     });
                 }
