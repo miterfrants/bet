@@ -7,7 +7,6 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
-using System.Collections.Generic;
 
 
 namespace Homo.Bet.Api
@@ -104,7 +103,15 @@ namespace Homo.Bet.Api
                             return;
                         }
 
-                        var inProgressIssues = issues.Where(item => item.assignee == asignee && item.status == "In Progress").ToList();
+                        var inProgressIssues = issues.Where(item =>
+                        {
+                            var matchedBetTask = betTasks.Where(task => task.ExternalId == (string)item.id).FirstOrDefault();
+                            if (matchedBetTask.Assignee?.Username != asignee)
+                            {
+                                return false;
+                            }
+                            return item.assignee == asignee && item.status == "In Progress";
+                        }).ToList();
                         var inProgressMessage = inProgressIssues.Count() > 0 ? $"\n\n正在執行的任務: \n--------------------\n\n {string.Join("", inProgressIssues.Select(item => $"{item.title} \n{item.url} \n\n"))}" : "";
                         isRock.LineBot.Utility.PushMessage(_appSettings.Secrets.LineGroupId,
                             $"{asignee}{unClaimMessage}{thisWeekMessage}{reviewMessage}{inProgressMessage}"
@@ -125,9 +132,5 @@ namespace Homo.Bet.Api
             _logger.LogInformation("GitHubIssuesNotificationCronJob is stopping.");
             return base.StopAsync(cancellationToken);
         }
-
     }
-
-
-
 }
