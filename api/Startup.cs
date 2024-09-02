@@ -73,6 +73,11 @@ namespace Homo.Bet.Api
                 c.TimeZoneInfo = TimeZoneInfo.Local;
                 c.CronExpression = @"0 0,8 * * 1-5";
             });
+            services.AddCronJob<GitHubAutoCommentViolationCronJob>(c =>
+            {
+                c.TimeZoneInfo = TimeZoneInfo.Local;
+                c.CronExpression = @"0 * * * *";
+            });
             services.AddCronJob<RenewCoinLog>(c =>
             {
                 c.TimeZoneInfo = TimeZoneInfo.Local;
