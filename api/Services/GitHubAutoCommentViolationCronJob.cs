@@ -86,8 +86,7 @@ namespace Homo.Bet.Api
                             {
                                 return;
                             }
-
-                            if ((System.DateTime.Now - lastUpdateDateTime).TotalHours < 24)
+                            if ((DateTime.Now - lastUpdateDateTime).TotalHours < ((int)lastUpdateDateTime.DayOfWeek >= 0 && (int)lastUpdateDateTime.DayOfWeek < 5 ? 24 : (int)lastUpdateDateTime.DayOfWeek == 5 ? 72 : 48))
                             {
                                 return;
                             }
