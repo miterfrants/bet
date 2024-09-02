@@ -44,7 +44,7 @@ namespace Homo.Bet.Api
             {
                 githubClient.DefaultRequestHeaders.UserAgent.TryParseAdd("request");
                 githubClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Token", token);
-                var httpContent = new StringContent(@"{""query"":""{    organization(login: \""homo-tw\"") {      repositories(affiliations: [OWNER], last: 10) {        edges {          node {            issues(states: [OPEN], last: 100) {              edges {                node { createdAt title url number comments(first:100) { nodes { id createdAt author { login } } } assignees(first:20){ nodes { login }} projectItems(first: 10) {   nodes {     fieldValueByName(name: \""Status\"") {       ... on ProjectV2ItemFieldSingleSelectValue {         name       }     }   } }                }              }            }          }        }      }    }  }""}", System.Text.Encoding.UTF8, "application/json");
+                var httpContent = new StringContent(@"{""query"":""{    organization(login: \""homo-tw\"") {      repositories(affiliations: [OWNER], last: 10) {        edges {          node {            issues(states: [OPEN], last: 100) {              edges {                node { createdAt updatedAt title url number comments(first:100) { nodes { id createdAt author { login } } } assignees(first:20){ nodes { login }} projectItems(first: 10) {   nodes {     fieldValueByName(name: \""Status\"") {       ... on ProjectV2ItemFieldSingleSelectValue {         name       }     }   } }                }              }            }          }        }      }    }  }""}", System.Text.Encoding.UTF8, "application/json");
                 HttpResponseMessage response = githubClient.PostAsync(url, httpContent).GetAwaiter().GetResult();
                 if (response.IsSuccessStatusCode)
                 {
@@ -62,6 +62,7 @@ namespace Homo.Bet.Api
                             id = item["node"]["number"],
                             assignee = assignees.FirstOrDefault(),
                             status = item["node"]["projectItems"]["nodes"].Count > 0 ? item["node"]["projectItems"]["nodes"][0]["fieldValueByName"]["name"] : null,
+                            lastUpdate = item["node"]["updatedAt"],
                             lastCommentUsername = item["node"]["comments"]["nodes"].Count == 0 ? null : item["node"]["comments"]["nodes"][item["node"]["comments"]["nodes"].Count - 1]["author"]["login"],
                             lastCommentCreatedAt = item["node"]["comments"]["nodes"].Count == 0 ? null : item["node"]["comments"]["nodes"][item["node"]["comments"]["nodes"].Count - 1]["createdAt"]
                         };
@@ -79,18 +80,18 @@ namespace Homo.Bet.Api
                         }
                         if (matchedTask.Assignee?.Username != issue.assignee && issue.assignee != null && issue.lastCommentUsername != null)
                         {
-                            System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(issue.lastCommentCreatedAt, Newtonsoft.Json.Formatting.Indented)}");
-                            DateTime lastDateTime;
-                            if (!DateTime.TryParse(issue.lastCommentCreatedAt.ToString().Replace("Z", ""), out lastDateTime))
+                            System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(issue.lastUpdate, Newtonsoft.Json.Formatting.Indented)}");
+                            DateTime lastUpdateDateTime;
+                            if (!DateTime.TryParse(issue.lastUpdate.ToString().Replace("Z", ""), out lastUpdateDateTime))
                             {
                                 return;
                             }
 
-                            if ((System.DateTime.Now - lastDateTime).TotalHours < 24)
+                            if ((System.DateTime.Now - lastUpdateDateTime).TotalHours < 24)
                             {
                                 return;
                             }
-                            System.Console.WriteLine($"{issue.id} {issue.assignee}: {issue.lastCommentCreatedAt}");
+                            System.Console.WriteLine($"{issue.id} {issue.assignee}: {issue.lastUpdate}");
 
                             httpContent = new StringContent($@"{{""body"": ""{issue.assignee} 違規""}}", System.Text.Encoding.UTF8, "application/json");
                             var response = githubClient.PostAsync($"https://api.github.com/repos/homo-tw/itemhub/issues/{issue.id}/comments", httpContent);
