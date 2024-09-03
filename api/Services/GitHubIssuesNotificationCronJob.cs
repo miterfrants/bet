@@ -83,6 +83,7 @@ namespace Homo.Bet.Api
                         return matchedBetTask.Assignee == null && issue.assignee != null;
                     }).ToList();
                     var asignees = issues.GroupBy(item => item.assignee).Select(item => item.Key).ToList();
+                    System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(asignees, Newtonsoft.Json.Formatting.Indented)}");
                     asignees.ForEach(asignee =>
                     {
                         var asigneeUnClaimIssues = unClaimIssues.Where(issue => issue.assignee == asignee).ToList();
@@ -97,11 +98,6 @@ namespace Homo.Bet.Api
                             return item.assignee == asignee && item.assignee != matchedBetTask?.Assignee?.Username && matchedBetTask?.Assignee != null && item.assignee != null;
                         }).ToList();
                         var reviewMessage = diffAsigneeIssues.Count() > 0 ? $"\n\n需要 Review 的 Issues: \n--------------------\n\n{string.Join("", diffAsigneeIssues.Select(item => $"{item.title} \n{item.url} \n\n"))}" : "";
-                        if (string.IsNullOrEmpty(unClaimMessage) && string.IsNullOrEmpty(thisWeekMessage) && string.IsNullOrEmpty(reviewMessage))
-                        {
-                            _logger.LogInformation(asignee);
-                            return;
-                        }
 
                         var inProgressIssues = issues.Where(item =>
                         {
@@ -113,6 +109,13 @@ namespace Homo.Bet.Api
                             return item.assignee == asignee && item.status == "In Progress";
                         }).ToList();
                         var inProgressMessage = inProgressIssues.Count() > 0 ? $"\n\n正在執行的任務: \n--------------------\n\n {string.Join("", inProgressIssues.Select(item => $"{item.title} \n{item.url} \n\n"))}" : "";
+
+                        if (string.IsNullOrEmpty(unClaimMessage) && string.IsNullOrEmpty(thisWeekMessage) && string.IsNullOrEmpty(reviewMessage) && string.IsNullOrEmpty(inProgressMessage))
+                        {
+                            _logger.LogInformation(asignee);
+                            return;
+                        }
+
                         isRock.LineBot.Utility.PushMessage(_appSettings.Secrets.LineGroupId,
                             $"{asignee}{unClaimMessage}{thisWeekMessage}{reviewMessage}{inProgressMessage}"
                             , _appSettings.Secrets.LineToken);
