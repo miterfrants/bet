@@ -137,16 +137,13 @@ namespace Homo.Bet.Api
                 throw new Homo.Core.Constants.CustomException(ERROR_CODE.TASK_HAS_CLAIMED, System.Net.HttpStatusCode.NotFound);
             }
             TaskDataservice.Assign(_dbContext, task, extraPayload.Id, dto.WorkDays);
-            System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(extraPayload.Id, Newtonsoft.Json.Formatting.Indented)}");
             if (extraPayload.Id == 4 || extraPayload.Id == 5)
             {
                 var username = extraPayload.Id == 4 ? "miterfrants" : "vickychou99";
-                System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(username, Newtonsoft.Json.Formatting.Indented)}");
                 using (HttpClient githubClient = new HttpClient())
                 {
                     var httpContent = new StringContent($@"{{""assignees"":[""{username}""]}}", System.Text.Encoding.UTF8, "application/json");
-                    var url = $"https://api.github.com/repos/homo-tw/itemhub/issues/{id}/assignees";
-                    System.Console.WriteLine(url);
+                    var url = $"https://api.github.com/repos/homo-tw/itemhub/issues/{task.ExternalId}/assignees";
                     var response = githubClient.PostAsync(url, httpContent);
                     System.Console.WriteLine(response.GetAwaiter().GetResult().Content.ReadAsStringAsync().GetAwaiter().GetResult());
                 }
