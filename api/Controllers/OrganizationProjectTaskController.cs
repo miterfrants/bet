@@ -1,8 +1,9 @@
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
-using Homo.Core;
+using System.Net.Http;
 using Homo.Core.Constants;
+using Microsoft.Extensions.Options;
 
 namespace Homo.Bet.Api
 {
@@ -12,9 +13,11 @@ namespace Homo.Bet.Api
     public class TaskController : ControllerBase
     {
         private readonly BargainingChipDBContext _dbContext;
-        public TaskController(BargainingChipDBContext dbContext)
+        private readonly string _githubToken;
+        public TaskController(BargainingChipDBContext dbContext, IOptions<AppSettings> options)
         {
             _dbContext = dbContext;
+            _githubToken = options.Value.Secrets.GitHubToken;
         }
 
         [HttpGet]
@@ -134,6 +137,18 @@ namespace Homo.Bet.Api
                 throw new Homo.Core.Constants.CustomException(ERROR_CODE.TASK_HAS_CLAIMED, System.Net.HttpStatusCode.NotFound);
             }
             TaskDataservice.Assign(_dbContext, task, extraPayload.Id, dto.WorkDays);
+            if (extraPayload.Id == 4 || extraPayload.Id == 5)
+            {
+                var username = extraPayload.Id == 4 ? "miterfrants" : "vickychou99";
+                using (HttpClient githubClient = new HttpClient())
+                {
+                    var httpContent = new StringContent($@"{{""assignees"":[""{username}""]}}", System.Text.Encoding.UTF8, "application/json");
+                    var url = $"https://api.github.com/repos/homo-tw/itemhub/issues/{id}/assignees";
+                    var response = githubClient.PostAsync(url, httpContent);
+                    System.Console.WriteLine(response.GetAwaiter().GetResult().Content.ReadAsStringAsync().GetAwaiter().GetResult());
+                }
+            }
+
             return new { status = Homo.Core.Constants.CUSTOM_RESPONSE.OK };
         }
 
