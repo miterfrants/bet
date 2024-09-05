@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using Homo.Core.Constants;
 using Microsoft.Extensions.Options;
+using System.Net.Http.Headers;
 
 namespace Homo.Bet.Api
 {
@@ -142,6 +143,8 @@ namespace Homo.Bet.Api
                 var username = extraPayload.Id == 4 ? "miterfrants" : "vickychou99";
                 using (HttpClient githubClient = new HttpClient())
                 {
+                    githubClient.DefaultRequestHeaders.UserAgent.TryParseAdd("request");
+                    githubClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Token", _githubToken);
                     var httpContent = new StringContent($@"{{""assignees"":[""{username}""]}}", System.Text.Encoding.UTF8, "application/json");
                     var url = $"https://api.github.com/repos/homo-tw/itemhub/issues/{task.ExternalId}/assignees";
                     var response = githubClient.PostAsync(url, httpContent);
