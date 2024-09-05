@@ -146,6 +146,7 @@ namespace Homo.Bet.Api
                 {
                     var httpContent = new StringContent($@"{{""assignees"":[""{username}""]}}", System.Text.Encoding.UTF8, "application/json");
                     var url = $"https://api.github.com/repos/homo-tw/itemhub/issues/{id}/assignees";
+                    System.Console.WriteLine(url);
                     var response = githubClient.PostAsync(url, httpContent);
                     System.Console.WriteLine(response.GetAwaiter().GetResult().Content.ReadAsStringAsync().GetAwaiter().GetResult());
                 }
