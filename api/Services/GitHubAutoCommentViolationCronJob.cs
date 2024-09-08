@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace Homo.Bet.Api
@@ -14,7 +15,6 @@ namespace Homo.Bet.Api
     public class GitHubAutoCommentViolationCronJob : CronJobService
     {
         private readonly ILogger<GitHubAutoCommentViolationCronJob> _logger;
-        private BargainingChipDBContext _dbContext;
         private readonly string _envName;
         private Api.AppSettings _appSettings;
 
@@ -38,9 +38,13 @@ namespace Homo.Bet.Api
             // 取得現有 ItemHub 所有的 Issues 
             string token = _appSettings.Secrets.GitHubToken;
             string url = $"https://api.github.com/graphql";
-            _dbContext = _serviceProvider.GetService<BargainingChipDBContext>();
+            var optionsBuilder = new DbContextOptionsBuilder<BargainingChipDBContext>();
+            var serverVersion = new MySqlServerVersion(new Version(8, 0, 25));
+            optionsBuilder.UseMySql(_appSettings.Secrets.DBConnectionString, serverVersion);
+
             using (HttpClient githubClient = new HttpClient())
             using (HttpClient betClient = new HttpClient())
+            using (BargainingChipDBContext dbContext = new BargainingChipDBContext(optionsBuilder.Options))
             {
                 githubClient.DefaultRequestHeaders.UserAgent.TryParseAdd("request");
                 githubClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Token", token);
@@ -69,7 +73,7 @@ namespace Homo.Bet.Api
                     }).ToList();
 
                     var githubIssueIds = issues.Select(item => (string)item.id).ToList();
-                    var betTasks = TaskDataservice.GetAll(_dbContext, (long)2, (long)6, null, null, githubIssueIds);
+                    var betTasks = TaskDataservice.GetAll(dbContext, (long)2, (long)6, null, null, githubIssueIds);
 
                     issues.ForEach(issue =>
                     {
