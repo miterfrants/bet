@@ -84,7 +84,6 @@ namespace Homo.Bet.Api
                         }
                         if (matchedTask.Assignee?.Username != issue.assignee && issue.assignee != null && issue.lastCommentUsername != null)
                         {
-                            System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(issue.lastUpdate, Newtonsoft.Json.Formatting.Indented)}");
                             DateTime lastUpdateDateTime;
                             if (!DateTime.TryParse(issue.lastUpdate.ToString().Replace("Z", ""), out lastUpdateDateTime))
                             {

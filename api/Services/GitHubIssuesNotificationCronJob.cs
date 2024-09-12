@@ -8,6 +8,8 @@ using Newtonsoft.Json.Linq;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Text;
 
 
 namespace Homo.Bet.Api
@@ -17,6 +19,7 @@ namespace Homo.Bet.Api
         private readonly ILogger<GitHubIssuesNotificationCronJob> _logger;
         private readonly string _envName;
         private Api.AppSettings _appSettings;
+        private readonly string _discordWebhook;
 
         public GitHubIssuesNotificationCronJob(IScheduleConfig<GitHubIssuesNotificationCronJob> config, ILogger<GitHubIssuesNotificationCronJob> logger, IServiceProvider serviceProvider, Microsoft.AspNetCore.Hosting.IWebHostEnvironment env, IOptions<AppSettings> appSettings)
             : base(config.CronExpression, config.TimeZoneInfo, serviceProvider)
@@ -24,6 +27,7 @@ namespace Homo.Bet.Api
             _logger = logger;
             _envName = env.EnvironmentName;
             _appSettings = appSettings.Value;
+            _discordWebhook = appSettings.Value.Secrets.DiscordWebhook;
         }
 
         public override System.Threading.Tasks.Task StartAsync(CancellationToken cancellationToken)
@@ -32,7 +36,7 @@ namespace Homo.Bet.Api
             return base.StartAsync(cancellationToken);
         }
 
-        public override System.Threading.Tasks.Task DoWork(CancellationToken cancellationToken)
+        public override async System.Threading.Tasks.Task DoWork(CancellationToken cancellationToken)
         {
             _logger.LogInformation($"{DateTime.Now:hh:mm:ss} is working.");
             // 取得現有 ItemHub 所有的 Issues 
@@ -87,21 +91,28 @@ namespace Homo.Bet.Api
                         return matchedBetTask.Assignee == null && issue.assignee != null;
                     }).ToList();
                     var asignees = issues.GroupBy(item => item.assignee).Select(item => item.Key).ToList();
-                    System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(asignees, Newtonsoft.Json.Formatting.Indented)}");
-                    asignees.ForEach(asignee =>
+                    var _httpClient = new HttpClient();
+                    var githubAccountAndDiscordAccountMapping = new Dictionary<string, string> { { "miterfrants", "995514040572989451" }, { "vickychou99", "954391229993484368" } };
+
+                    for (var i = 0; i < asignees.Count; i++)
                     {
+                        var asignee = asignees[i];
+                        if (asignee == null)
+                        {
+                            continue;
+                        }
                         var asigneeUnClaimIssues = unClaimIssues.Where(issue => issue.assignee == asignee).ToList();
-                        var unClaimMessage = asigneeUnClaimIssues.Count() > 0 ? $"\n\n未認領的 Issues: \n--------------------\n\n {string.Join("", asigneeUnClaimIssues.Select(issue => $"{issue.title} \n{issue.url} \n\n").ToList())}" : "";
+                        var unClaimMessage = asigneeUnClaimIssues.Count() > 0 ? $"\\n### 未認領的 Issues: \\n{string.Join("\\n", asigneeUnClaimIssues.Select(issue => $"- [{issue.title}]({issue.url})").ToList())}" : "";
 
                         var thisWeekIssues = issues.Where(item => item.assignee == asignee && item.status == "This Week").ToList();
-                        var thisWeekMessage = thisWeekIssues.Count() > 0 ? $"\n\n這週待處理事項: \n--------------------\n\n {string.Join("", thisWeekIssues.Select(item => $"{item.title} \n{item.url} \n\n"))}" : "";
+                        var thisWeekMessage = thisWeekIssues.Count() > 0 ? $"\\n### 這週待處理事項: \\n{string.Join("\\n", thisWeekIssues.Select(item => $"- [{item.title}]({item.url})"))}" : "";
 
                         var diffAsigneeIssues = issues.Where(item =>
                         {
                             var matchedBetTask = betTasks.Where(task => task.ExternalId == (string)item.id).FirstOrDefault();
                             return item.assignee == asignee && item.assignee != matchedBetTask?.Assignee?.Username && matchedBetTask?.Assignee != null && item.assignee != null;
                         }).ToList();
-                        var reviewMessage = diffAsigneeIssues.Count() > 0 ? $"\n\n需要 Review 的 Issues: \n--------------------\n\n{string.Join("", diffAsigneeIssues.Select(item => $"{item.title} \n{item.url} \n\n"))}" : "";
+                        var reviewMessage = diffAsigneeIssues.Count() > 0 ? $"\\n### 需要 Review 的 Issues: \\n{string.Join("\\n", diffAsigneeIssues.Select(item => $"- [{item.title}]({item.url})"))}" : "";
 
                         var inProgressIssues = issues.Where(item =>
                         {
@@ -112,26 +123,27 @@ namespace Homo.Bet.Api
                             }
                             return item.assignee == asignee && item.status == "In Progress";
                         }).ToList();
-                        var inProgressMessage = inProgressIssues.Count() > 0 ? $"\n\n正在執行的任務: \n--------------------\n\n {string.Join("", inProgressIssues.Select(item => $"{item.title} \n{item.url} \n\n"))}" : "";
+                        var inProgressMessage = inProgressIssues.Count() > 0 ? $"\\n### 正在執行的任務: \\n{string.Join("\\n", inProgressIssues.Select(item => $"- [{item.title}]({item.url})"))}" : "";
 
                         if (string.IsNullOrEmpty(unClaimMessage) && string.IsNullOrEmpty(thisWeekMessage) && string.IsNullOrEmpty(reviewMessage) && string.IsNullOrEmpty(inProgressMessage))
                         {
-                            _logger.LogInformation(asignee);
-                            return;
+                            continue;
                         }
+                        if (!githubAccountAndDiscordAccountMapping.ContainsKey(asignee))
+                        {
+                            continue;
+                        }
+                        var endLine = $"\\n\\n\\n";
+                        var resp = await _httpClient.PostAsync(_discordWebhook, new StringContent($@"{{""content"":""## <@{githubAccountAndDiscordAccountMapping[asignee]}>\n{unClaimMessage}{thisWeekMessage}{reviewMessage}{inProgressMessage}{endLine}""}}", Encoding.UTF8, "application/json"), CancellationToken.None);
+                        var respBody = await resp.Content.ReadAsStringAsync();
+                    }
 
-                        isRock.LineBot.Utility.PushMessage(_appSettings.Secrets.LineGroupId,
-                            $"{asignee}{unClaimMessage}{thisWeekMessage}{reviewMessage}{inProgressMessage}"
-                            , _appSettings.Secrets.LineToken);
-                    });
                 }
                 else
                 {
                     Console.WriteLine($"Failed to fetch issues: {response.StatusCode}");
                 }
             }
-
-            return System.Threading.Tasks.Task.CompletedTask;
         }
 
         public override System.Threading.Tasks.Task StopAsync(CancellationToken cancellationToken)

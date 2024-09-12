@@ -22,6 +22,7 @@ namespace Homo.Bet.Api
         public string GitHubToken { get; set; }
         public string LineToken { get; set; }
         public string LineGroupId { get; set; }
+        public string DiscordWebhook { get; set; }
     }
 
     public class Common : Homo.Api.ICommon
