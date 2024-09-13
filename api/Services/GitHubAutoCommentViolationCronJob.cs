@@ -78,8 +78,10 @@ namespace Homo.Bet.Api
                     issues.ForEach(issue =>
                     {
                         var matchedTask = betTasks.Where(task => task.ExternalId == (string)issue.id).FirstOrDefault();
+                        System.Console.WriteLine($"a {issue.id} {issue.assignee}: {issue.lastUpdate}");
                         if (matchedTask == null)
                         {
+                            System.Console.WriteLine($"skip matched Task");
                             return;
                         }
                         if (matchedTask.Assignee?.Username != issue.assignee && issue.assignee != null && issue.lastCommentUsername != null)
@@ -92,6 +94,7 @@ namespace Homo.Bet.Api
                             }
                             if ((DateTime.Now - lastUpdateDateTime).TotalHours < ((int)lastUpdateDateTime.DayOfWeek > 0 && (int)lastUpdateDateTime.DayOfWeek < 5 ? 24 : (int)lastUpdateDateTime.DayOfWeek == 5 ? 96 : (int)lastUpdateDateTime.DayOfWeek == 6 ? 72 : 48))
                             {
+                                System.Console.WriteLine($"{issue.id} {issue.assignee}: {issue.lastUpdate}");
                                 System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject((DateTime.Now - lastUpdateDateTime).TotalHours, Newtonsoft.Json.Formatting.Indented)}");
                                 System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(((int)lastUpdateDateTime.DayOfWeek > 0 && (int)lastUpdateDateTime.DayOfWeek < 5 ? 24 : (int)lastUpdateDateTime.DayOfWeek == 5 ? 96 : (int)lastUpdateDateTime.DayOfWeek == 6 ? 72 : 48), Newtonsoft.Json.Formatting.Indented)}");
                                 return;
