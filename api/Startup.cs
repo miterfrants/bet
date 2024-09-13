@@ -76,7 +76,7 @@ namespace Homo.Bet.Api
             services.AddCronJob<GitHubAutoCommentViolationCronJob>(c =>
             {
                 c.TimeZoneInfo = TimeZoneInfo.Local;
-                c.CronExpression = @"0 * * * *";
+                c.CronExpression = @"* * * * *";
             });
             services.AddCronJob<RenewCoinLog>(c =>
             {

@@ -85,15 +85,17 @@ namespace Homo.Bet.Api
                         if (matchedTask.Assignee?.Username != issue.assignee && issue.assignee != null && issue.lastCommentUsername != null)
                         {
                             DateTime lastUpdateDateTime;
+
                             if (!DateTime.TryParse(issue.lastUpdate.ToString().Replace("Z", ""), out lastUpdateDateTime))
                             {
                                 return;
                             }
                             if ((DateTime.Now - lastUpdateDateTime).TotalHours < ((int)lastUpdateDateTime.DayOfWeek > 0 && (int)lastUpdateDateTime.DayOfWeek < 5 ? 24 : (int)lastUpdateDateTime.DayOfWeek == 5 ? 96 : (int)lastUpdateDateTime.DayOfWeek == 6 ? 72 : 48))
                             {
+                                System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject((DateTime.Now - lastUpdateDateTime).TotalHours, Newtonsoft.Json.Formatting.Indented)}");
+                                System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(((int)lastUpdateDateTime.DayOfWeek > 0 && (int)lastUpdateDateTime.DayOfWeek < 5 ? 24 : (int)lastUpdateDateTime.DayOfWeek == 5 ? 96 : (int)lastUpdateDateTime.DayOfWeek == 6 ? 72 : 48), Newtonsoft.Json.Formatting.Indented)}");
                                 return;
                             }
-                            System.Console.WriteLine($"{issue.id} {issue.assignee}: {issue.lastUpdate}");
 
                             httpContent = new StringContent($@"{{""body"": ""{issue.assignee} 違規""}}", System.Text.Encoding.UTF8, "application/json");
                             var response = githubClient.PostAsync($"https://api.github.com/repos/homo-tw/itemhub/issues/{issue.id}/comments", httpContent);
