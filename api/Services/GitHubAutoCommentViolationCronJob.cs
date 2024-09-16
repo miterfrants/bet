@@ -95,8 +95,6 @@ namespace Homo.Bet.Api
                             if ((DateTime.Now - lastUpdateDateTime).TotalHours < ((int)lastUpdateDateTime.DayOfWeek > 0 && (int)lastUpdateDateTime.DayOfWeek < 5 ? 24 : (int)lastUpdateDateTime.DayOfWeek == 5 ? 96 : (int)lastUpdateDateTime.DayOfWeek == 6 ? 72 : 48))
                             {
                                 System.Console.WriteLine($"{issue.id} {issue.assignee}: {issue.lastUpdate}");
-                                System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject((DateTime.Now - lastUpdateDateTime).TotalHours, Newtonsoft.Json.Formatting.Indented)}");
-                                System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(((int)lastUpdateDateTime.DayOfWeek > 0 && (int)lastUpdateDateTime.DayOfWeek < 5 ? 24 : (int)lastUpdateDateTime.DayOfWeek == 5 ? 96 : (int)lastUpdateDateTime.DayOfWeek == 6 ? 72 : 48), Newtonsoft.Json.Formatting.Indented)}");
                                 return;
                             }
 

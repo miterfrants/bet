@@ -2,9 +2,10 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using System.Net.Http;
-using Homo.Core.Constants;
 using Microsoft.Extensions.Options;
 using System.Net.Http.Headers;
+using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
 namespace Homo.Bet.Api
 {
@@ -33,26 +34,6 @@ namespace Homo.Bet.Api
             };
         }
 
-        [HttpPost]
-        public ActionResult<dynamic> create([FromRoute] long organizationId, [FromRoute] long projectId, [FromBody] DTOs.Task dto, Homo.Bet.Api.DTOs.JwtExtraPayload extraPayload)
-        {
-            long ownerId = extraPayload.Id;
-            var existsTask = TaskDataservice.GetOneByExternalId(_dbContext, projectId, dto.ExternalId);
-            if (existsTask != null)
-            {
-                throw new CustomException(ERROR_CODE.TASK_EXISTS, System.Net.HttpStatusCode.BadRequest);
-            }
-            Task task = TaskDataservice.Create(_dbContext, projectId, ownerId, dto);
-            if (ownerId == 7)
-            {
-                CoinsLogDataService.Create(_dbContext, 0, task.Id, ownerId, COIN_LOG_TYPE.BET, new DTOs.CoinLog()
-                {
-                    Qty = 2
-                });
-            }
-            return new { Id = task.Id, Qty = 0 };
-        }
-
         [HttpGet]
         [Route("all")]
         public ActionResult<dynamic> getAll([FromRoute] long organizationId, [FromRoute] long projectId, [FromQuery] string name, [FromQuery] int limit, [FromQuery] int page, [FromQuery] string externalIds, Homo.Bet.Api.DTOs.JwtExtraPayload extraPayload)
@@ -62,32 +43,85 @@ namespace Homo.Bet.Api
             return TaskDataservice.GetAll(_dbContext, organizationId, projectId, null, null, listOfExternalId);
         }
 
-        [HttpGet]
-        [Route("by-external-id/{extId}")]
-        public ActionResult<dynamic> getOneByExternalId([FromRoute] long organizationId, [FromRoute] long projectId, [FromRoute] string extId, Homo.Bet.Api.DTOs.JwtExtraPayload extraPayload)
+        [HttpPost]
+        [Route("get-list-and-renew")]
+        public async Task<dynamic> GetListAndRenew([FromRoute] long organizationId, [FromRoute] long projectId, [FromBody] List<string> extIds, Homo.Bet.Api.DTOs.JwtExtraPayload extraPayload)
         {
-            var task = TaskDataservice.GetOneByExternalId(_dbContext, projectId, extId);
-            if (task == null)
+            var tasks = TaskDataservice.GetListByExternalIds(_dbContext, projectId, extIds);
+            var taskExtIds = tasks.Select(task => task.ExternalId);
+            // should be create 
+            var shouldBeAddedItems = extIds.Where(extId => !taskExtIds.Contains(extId)).Select(item => new DTOs.Task()
             {
-                throw new Homo.Core.Constants.CustomException(ERROR_CODE.DATA_NOT_FOUND, System.Net.HttpStatusCode.NotFound);
-            }
-            int totalQty = System.Math.Abs(CoinsLogDataService.GetTaskBetCoins(_dbContext, task.Id));
-            int ownerFreeBet = System.Math.Abs(CoinsLogDataService.GetTaskOwnerFreeBetCoins(_dbContext, task.Id, extraPayload.Id));
-            int ownerLockedBet = System.Math.Abs(CoinsLogDataService.GetTaskOwnerFreeBetCoins(_dbContext, task.Id, extraPayload.Id));
-            CoinLog log = CoinsLogDataService.GetFreeOneByTaskIdAndOwnerId(_dbContext, task.Id, extraPayload.Id);
+                Name = "",
+                Type = TASK_TYPE.GITHUB,
+                ExternalId = item
+            }).ToList();
+            var newTasks = TaskDataservice.BatchCreate(_dbContext, projectId, extraPayload.Id, shouldBeAddedItems);
 
-            return new
+            // should be delete 
+            var shouldBeDeletedIds = tasks.Where(task => !extIds.Contains(task.ExternalId)).Select(item => item.Id).ToList();
+            TaskDataservice.BatchDelete(_dbContext, extraPayload.Id, shouldBeDeletedIds);
+
+            var allTask = new List<Task>();
+            allTask.AddRange(tasks);
+            allTask.AddRange(newTasks);
+
+            var githubIssues = new List<GithubIssueIdentify>();
+            // get github issue project and status and relation of project and issues;
+            using (HttpClient githubClient = new HttpClient())
             {
-                Id = task.Id,
-                excludeOwnerBet = totalQty - ownerFreeBet - ownerLockedBet,
-                ownerLockedBet = ownerLockedBet,
-                ownerFreeBet = ownerFreeBet,
-                assigneeId = task.AssigneeId,
-                assignee = task.Assignee,
-                expectedFinishAt = task.ExpectedFinishAt,
-                currentCoinLogId = log == null ? 0 : log.Id,
-                status = task.Status
-            };
+                githubClient.DefaultRequestHeaders.UserAgent.TryParseAdd("request");
+                githubClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Token", _githubToken);
+                string url = $"https://api.github.com/graphql";
+                var httpContent = new StringContent(@$"{{""query"":""{{ organization(login: \""homo-tw\"") {{ repository(name: \""itemhub\"") {{ issues(first: 40, states: OPEN, orderBy: {{field: CREATED_AT, direction: DESC}}) {{ nodes {{ number, id, title, closed, projectItems(first: 20) {{ edges {{ node {{id}} }},nodes {{ fieldValueByName(name: \""Status\"") {{ ... on ProjectV2ItemFieldSingleSelectValue {{name, optionId}} }} }} }}, projectsV2(first:20) {{ nodes{{ id, title, field(name: \""Status\"") {{ ... on ProjectV2SingleSelectField {{ name, id }} }} }} }} }} }} }} }} }}""}}", System.Text.Encoding.UTF8, "application/json");
+                HttpResponseMessage response = await githubClient.PostAsync(url, httpContent);
+                string jsonResponse = await response.Content.ReadAsStringAsync();
+                JObject graphqlResponse = JObject.Parse(jsonResponse);
+                githubIssues = graphqlResponse["data"]["organization"]["repository"]["issues"]["nodes"].ToList<dynamic>().Where(item => (bool)item.closed != true).Select(item =>
+                    {
+                        var projects = ((JArray)item["projectsV2"]["nodes"]).ToList<dynamic>();
+                        var projectItems = ((JArray)item["projectItems"]["nodes"]).ToList<dynamic>().Where(item => item["fieldValueByName"] != null).ToList();
+                        var projectEdges = ((JArray)item["projectItems"]["edges"]).ToList<dynamic>().Where(item => item["node"] != null).ToList();
+                        return new GithubIssueIdentify
+                        {
+                            Number = (string)item["number"],
+                            IssueId = item["id"],
+                            ProjectId = projects.Count > 0 ? projects[0]["id"] : null,
+                            FieldId = projects.Count > 0 ? projects[0]["field"]["id"] : null,
+                            ConnectionId = projectEdges.Count > 0 ? projectEdges[0]["node"]["id"] : null,
+                            OptionId = projectItems.Count > 0 ? projectItems[0]["fieldValueByName"]["optionId"] : null,
+                        };
+                    }).ToList();
+            }
+
+            var betLogs = CoinsLogDataService.GetAllByTaskIds(_dbContext, allTask.Select(item => { long? result; result = item.Id; return result; }).ToList(), COIN_LOG_TYPE.BET);
+            return allTask.Select(task =>
+            {
+                var totalQty = System.Math.Abs(betLogs.Where(item => item.TaskId == task.Id).Sum(item => item.Qty));
+                var ownerFreeBet = System.Math.Abs(betLogs.Where(item => item.TaskId == task.Id && item.OwnerId == extraPayload.Id && item.IsLock == false).Sum(item => item.Qty));
+                var ownerLockedBet = System.Math.Abs(betLogs.Where(item => item.TaskId == task.Id && item.OwnerId == extraPayload.Id && item.IsLock == true).Sum(item => item.Qty));
+                var log = betLogs.Where(item => item.OwnerId == extraPayload.Id && item.IsLock != true && item.TaskId == task.Id).FirstOrDefault();
+                var matchedIssue = githubIssues.Where(item => item.Number == task.ExternalId).FirstOrDefault();
+
+                return new
+                {
+                    task.Id,
+                    excludeOwnerBet = totalQty - ownerFreeBet - ownerLockedBet,
+                    ownerLockedBet,
+                    ownerFreeBet,
+                    assigneeId = task.AssigneeId,
+                    assignee = task.Assignee,
+                    expectedFinishAt = task.ExpectedFinishAt,
+                    currentCoinLogId = log == null ? 0 : log.Id,
+                    status = task.Status,
+                    externalId = task.ExternalId,
+                    githubStatusFieldId = matchedIssue?.FieldId,
+                    githubProjectId = matchedIssue?.ProjectId,
+                    githubIssueId = matchedIssue?.IssueId,
+                    githubOptionId = matchedIssue?.OptionId,
+                    githubConnectionId = matchedIssue.ConnectionId,
+                };
+            }).ToList();
         }
 
         [HttpPost]
@@ -203,5 +237,23 @@ namespace Homo.Bet.Api
             CoinsLogDataService.Create(_dbContext, extraPayload.Id, task.Id, extraPayload.Id, COIN_LOG_TYPE.EARN, new DTOs.CoinLog() { Qty = -bonus });
             return new { status = Homo.Core.Constants.CUSTOM_RESPONSE.OK };
         }
+    }
+
+
+    public class GithubIssueIdentify
+    {
+        public string Number { get; set; }
+        public string ProjectId { get; set; }
+        public string IssueId { get; set; }
+        public string FieldId { get; set; }
+        public string OptionId { get; set; }
+        public string ConnectionId { get; set; }
+        public List<GithubProjectStatusOption> Options { get; set; }
+    }
+
+    public class GithubProjectStatusOption
+    {
+        public string Name { get; set; }
+        public string Id { get; set; }
     }
 }

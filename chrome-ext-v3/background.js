@@ -7,10 +7,9 @@ const API = {
 };
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-    if (changeInfo.status === 'complete' &&
+    if (changeInfo.status === 'complete' && tab.url &&
             tab.url.startsWith('https://github.com/homo-tw/itemhub/issues')
     ) {
-        console.log('index github', tab.url, tab.id);
         chrome.scripting.executeScript({
             target: { tabId },
             files: ['inject-github.js']
@@ -19,10 +18,24 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 });
 
 chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
-    if (req.action === 'get-issue-status') {
+    if (req.action === 'get-tasks-and-renew') {
         chrome.storage.sync.get(['token']).then(storage => {
-            getIssueStatus(storage.token, req.externalId).then(issueStatus => {
-                sendResponse(issueStatus);
+            getTasksAndRenew(storage.token, req.externalIds).then(issues => {
+                sendResponse(issues);
+            });
+        });
+    } else if (req.action === 'update-github-project-status') {
+        chrome.storage.sync.get(['token']).then(storage => {
+            updateGithubProjectStatus(storage.token, { projectId: req.projectId, statusId: req.optionId, connectionId: req.connectionId, statusFieldId: req.statusFieldId });
+        });
+    } else if (req.action === 'add-to-project') {
+        chrome.storage.sync.get(['token']).then(storage => {
+            addIssueToGithubProject(storage.token, { issueId: req.issueId, projectId: req.projectId, originalProjectId: req.originalProjectId, originalConnectionId: req.originalConnectionId });
+        });
+    } else if (req.action === 'get-github-projects') {
+        chrome.storage.sync.get(['token']).then(storage => {
+            getGithubProjects(storage.token, req.externalIds).then(githubProjects => {
+                sendResponse(githubProjects);
             });
         });
     } else if (req.action === 'update-coin') {
@@ -152,7 +165,22 @@ async function updateCoinLog (token, externalId, freeCoins, betCoins, callback) 
     callback(resp);
 }
 
-async function getIssueStatus (token, externalId) {
+async function getTasksAndRenew (token, externalIds) {
+    const option = {
+        method: 'POST',
+        headers: {
+            Authorization: 'Bearer ' + token,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(externalIds)
+    };
+    const resp = await fetch(`${API.ENDPOINT}/organizations/2/projects/6/tasks/get-list-and-renew`, option);
+    if (resp.status === 200) {
+        return await resp.json();
+    }
+}
+
+async function getGithubProjects (token) {
     const option = {
         method: 'GET',
         headers: {
@@ -160,29 +188,38 @@ async function getIssueStatus (token, externalId) {
             'Content-Type': 'application/json'
         }
     };
-    const resp = await fetch(`${API.ENDPOINT}/organizations/2/projects/6/tasks/by-external-id/${externalId}`, option);
+    const resp = await fetch(`${API.ENDPOINT}/github-projects`, option);
     if (resp.status === 200) {
         return await resp.json();
     }
-    if (resp.status === 404) {
-        const createAction = await fetch(`${API.ENDPOINT}/organizations/2/projects/6/tasks`, {
-            method: 'POST',
-            headers: {
-                Authorization: 'Bearer ' + token,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                externalId,
-                type: 0,
-                name: ''
-            })
-        });
-        await createAction.json();
-        const respOfNewIssue = await fetch(`${API.ENDPOINT}/organizations/2/projects/6/tasks/by-external-id/${externalId}`, {
-            headers: {
-                Authorization: 'Bearer ' + token
-            }
-        });
-        return await respOfNewIssue.json();
+}
+
+async function addIssueToGithubProject (token, body) {
+    const option = {
+        method: 'POST',
+        headers: {
+            Authorization: 'Bearer ' + token,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+    };
+    const resp = await fetch(`${API.ENDPOINT}/github-projects/add-to-project`, option);
+    if (resp.status === 200) {
+        return await resp.json();
+    }
+}
+
+async function updateGithubProjectStatus (token, body) {
+    const option = {
+        method: 'POST',
+        headers: {
+            Authorization: 'Bearer ' + token,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+    };
+    const resp = await fetch(`${API.ENDPOINT}/github-projects/update-status`, option);
+    if (resp.status === 200) {
+        return await resp.json();
     }
 }

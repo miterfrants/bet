@@ -134,7 +134,7 @@ namespace Homo.Bet.Api
                 .Sum(x => x.Qty);
         }
 
-        public static List<CoinLog> GetAll(BargainingChipDBContext dbContext, long taskId, long ownerId, COIN_LOG_TYPE type)
+        public static List<CoinLog> GetAll(BargainingChipDBContext dbContext, long taskId, long ownerId, COIN_LOG_TYPE type, bool IsLock = false)
         {
             return dbContext.CoinLog
                 .Where(x =>
@@ -142,7 +142,18 @@ namespace Homo.Bet.Api
                     && x.TaskId == taskId
                     && x.OwnerId == ownerId
                     && x.Type == type
-                    && x.IsLock == false
+                    && x.IsLock == IsLock
+                )
+                .ToList();
+        }
+
+        public static List<CoinLog> GetAllByTaskIds(BargainingChipDBContext dbContext, List<long?> taskIds, COIN_LOG_TYPE type)
+        {
+            return dbContext.CoinLog
+                .Where(x =>
+                    x.DeletedAt == null
+                    && taskIds.Contains(x.TaskId)
+                    && x.Type == type
                 )
                 .ToList();
         }

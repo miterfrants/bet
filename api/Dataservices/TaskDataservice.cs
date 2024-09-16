@@ -89,6 +89,29 @@ namespace Homo.Bet.Api
             return record;
         }
 
+        public static List<Task> BatchCreate(BargainingChipDBContext dbContext, long projectId, long createdBy, List<DTOs.Task> dto)
+        {
+            var result = new List<Task>();
+            dto.ForEach(dtoItem =>
+            {
+                Task record = new Task();
+                foreach (var propOfDTO in dtoItem.GetType().GetProperties())
+                {
+                    var value = propOfDTO.GetValue(dtoItem);
+                    var prop = record.GetType().GetProperty(propOfDTO.Name);
+                    prop.SetValue(record, value);
+                }
+                record.ProjectId = projectId;
+                record.CreatedBy = createdBy;
+                record.CreatedAt = DateTime.Now;
+                dbContext.Task.Add(record);
+                result.Add(record);
+            });
+
+            dbContext.SaveChanges();
+            return result;
+        }
+
         public static void BatchDelete(BargainingChipDBContext dbContext, long editedBy, List<long> ids)
         {
             foreach (long id in ids)
@@ -124,6 +147,18 @@ namespace Homo.Bet.Api
                 .Include(x => x.Assignee)
                 .FirstOrDefault();
             return record;
+        }
+
+        public static List<Task> GetListByExternalIds(BargainingChipDBContext dbContext, long projectId, List<string> externalId)
+        {
+            return dbContext.Task
+                .Where(x =>
+                    x.DeletedAt == null
+                    && x.ProjectId == projectId
+                    && externalId.Contains(x.ExternalId)
+                )
+                .Include(x => x.Assignee)
+                .ToList();
         }
 
         public static void Assign(BargainingChipDBContext dbContext, Task task, long assigneeId, int WorkDays)
