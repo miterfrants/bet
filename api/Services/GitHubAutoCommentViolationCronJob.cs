@@ -65,10 +65,10 @@ namespace Homo.Bet.Api
                             url = item["node"]["url"],
                             id = item["node"]["number"],
                             assignee = assignees.FirstOrDefault(),
-                            status = item["node"]["projectItems"]["nodes"].Count > 0 ? item["node"]["projectItems"]["nodes"][0]["fieldValueByName"]["name"] : null,
+                            status = item["node"]["projectItems"] != null && item["node"]["projectItems"]["nodes"] != null && item["node"]["projectItems"]["nodes"].Count > 0 ? item["node"]["projectItems"]["nodes"][0]["fieldValueByName"]["name"] : null,
                             lastUpdate = item["node"]["updatedAt"],
-                            lastCommentUsername = item["node"]["comments"]["nodes"].Count == 0 ? null : item["node"]["comments"]["nodes"][item["node"]["comments"]["nodes"].Count - 1]["author"]["login"],
-                            lastCommentCreatedAt = item["node"]["comments"]["nodes"].Count == 0 ? null : item["node"]["comments"]["nodes"][item["node"]["comments"]["nodes"].Count - 1]["createdAt"]
+                            lastCommentUsername = item["node"]["comments"] == null || item["node"]["comments"]["nodes"] == null || item["node"]["comments"]["nodes"].Count == 0 ? null : item["node"]["comments"]["nodes"][item["node"]["comments"]["nodes"].Count - 1]["author"]["login"],
+                            lastCommentCreatedAt = item["node"]["comments"] == null || item["node"]["comments"]["nodes"] == null || item["node"]["comments"]["nodes"].Count == 0 ? null : item["node"]["comments"]["nodes"][item["node"]["comments"]["nodes"].Count - 1]["createdAt"]
                         };
                     }).ToList();
 
