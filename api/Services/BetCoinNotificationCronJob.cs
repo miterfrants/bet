@@ -39,7 +39,7 @@ namespace Homo.Bet.Api
             List<long> userIds = hasFreeBetCoinsUsers.Select(x => x.OwnerId).ToList<long>();
             List<User> users = UserDataservice.GetAllByIds(userIds, _dbContext);
             var _httpClient = new HttpClient();
-            var userIdAndDiscordAccountMapping = new Dictionary<long, string> { { 4, "995514040572989451" }, { 5, "954391229993484368" }, { 7, "995514040572989451" } };
+            var userIdAndDiscordAccountMapping = new Dictionary<long, string> { { 4, "995514040572989451" }, { 5, "954391229993484368" } };
             for (int i = 0; i < users.Count; i++)
             {
                 var user = users[i];
