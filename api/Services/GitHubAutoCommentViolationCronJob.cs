@@ -59,13 +59,14 @@ namespace Homo.Bet.Api
                     var issues = graphqlResponse["data"]["organization"]["repositories"]["edges"][0]["node"]["issues"]["edges"].ToList<dynamic>().Select(item =>
                     {
                         var assignees = ((JArray)item["node"]["assignees"]["nodes"]).ToList<dynamic>().Select(item => (string)item["login"]);
+                        System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(item, Newtonsoft.Json.Formatting.Indented)}");
                         return new
                         {
                             title = item["node"]["title"],
                             url = item["node"]["url"],
                             id = item["node"]["number"],
                             assignee = assignees.FirstOrDefault(),
-                            status = item["node"]["projectItems"] != null && item["node"]["projectItems"]["nodes"] != null && item["node"]["projectItems"]["nodes"].Count > 0 ? item["node"]["projectItems"]["nodes"][0]["fieldValueByName"]["name"] : null,
+                            status = item["node"]["projectItems"] != null && item["node"]["projectItems"]["nodes"] != null && item["node"]["projectItems"]["nodes"].Count > 0 && item["node"]["projectItems"]["nodes"][0]["fieldValueByName"] != null ? item["node"]["projectItems"]["nodes"][0]["fieldValueByName"]["name"] : null,
                             lastUpdate = item["node"]["updatedAt"],
                             lastCommentUsername = item["node"]["comments"] == null || item["node"]["comments"]["nodes"] == null || item["node"]["comments"]["nodes"].Count == 0 ? null : item["node"]["comments"]["nodes"][item["node"]["comments"]["nodes"].Count - 1]["author"]["login"],
                             lastCommentCreatedAt = item["node"]["comments"] == null || item["node"]["comments"]["nodes"] == null || item["node"]["comments"]["nodes"].Count == 0 ? null : item["node"]["comments"]["nodes"][item["node"]["comments"]["nodes"].Count - 1]["createdAt"]
