@@ -79,7 +79,7 @@ namespace Homo.Bet.Api
                     issues.ForEach(issue =>
                     {
                         var matchedTask = betTasks.Where(task => task.ExternalId == (string)issue.id).FirstOrDefault();
-                        System.Console.WriteLine($"a {issue.id} {issue.assignee}: {issue.lastUpdate}");
+                        System.Console.WriteLine($"{issue.id} {issue.assignee}: {issue.lastUpdate}");
                         if (matchedTask == null)
                         {
                             System.Console.WriteLine($"skip matched Task");
@@ -95,13 +95,11 @@ namespace Homo.Bet.Api
                             }
                             if ((DateTime.Now - lastUpdateDateTime).TotalHours < ((int)lastUpdateDateTime.DayOfWeek > 0 && (int)lastUpdateDateTime.DayOfWeek < 5 ? 24 : (int)lastUpdateDateTime.DayOfWeek == 5 ? 96 : (int)lastUpdateDateTime.DayOfWeek == 6 ? 72 : 48))
                             {
-                                System.Console.WriteLine($"{issue.id} {issue.assignee}: {issue.lastUpdate}");
                                 return;
                             }
 
                             httpContent = new StringContent($@"{{""body"": ""{issue.assignee} 違規""}}", System.Text.Encoding.UTF8, "application/json");
                             var response = githubClient.PostAsync($"https://api.github.com/repos/homo-tw/itemhub/issues/{issue.id}/comments", httpContent);
-                            System.Console.WriteLine(response.GetAwaiter().GetResult().Content.ReadAsStringAsync().GetAwaiter().GetResult());
                         }
                     });
                 }

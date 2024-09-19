@@ -69,7 +69,7 @@ namespace Homo.Bet.Api
                             url = item["node"]["url"],
                             id = item["node"]["number"],
                             assignee = assignees.FirstOrDefault(),
-                            status = item["node"]["projectItems"]["nodes"].Count > 0 ? item["node"]["projectItems"]["nodes"][0]["fieldValueByName"]["name"] : null,
+                            status = item["node"]["projectItems"]["nodes"].Count > 0 && item["node"]["projectItems"]["nodes"][0]["fieldValueByName"] != null ? item["node"]["projectItems"]["nodes"][0]["fieldValueByName"]["name"] : null,
                         };
                     }).ToList();
 
