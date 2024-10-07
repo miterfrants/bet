@@ -101,7 +101,6 @@ namespace Homo.Bet.Api
             newTasks.ForEach(task =>
             {
                 var matchedGithubIssue = githubIssues.Where(issue => issue.Number == task.ExternalId).FirstOrDefault();
-                System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(matchedGithubIssue, Newtonsoft.Json.Formatting.Indented)}");
                 if (matchedGithubIssue == null)
                 {
                     return;
