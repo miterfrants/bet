@@ -71,7 +71,7 @@ namespace Homo.Bet.Api
             services.AddCronJob<GitHubIssuesNotificationCronJob>(c =>
             {
                 c.TimeZoneInfo = TimeZoneInfo.Local;
-                c.CronExpression = @"* * * * *";//@"0 0,8 * * 1-5";
+                c.CronExpression = @"0 0,8 * * 1-5";
             });
             services.AddCronJob<GitHubAutoCommentViolationCronJob>(c =>
             {
