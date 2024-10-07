@@ -106,23 +106,24 @@ namespace Homo.Bet.Api
                     return;
                 }
                 int defaultCoin = 0;
-                if (matchedGithubIssue.Title.ToLower().StartsWith("planning"))
+                var title = matchedGithubIssue.Title.ToLower();
+                if (title.StartsWith("planning") || title.StartsWith("plan"))
                 {
                     defaultCoin = _defaultCoinMapping.Where(item => item.Key == "planning").FirstOrDefault().Value;
                 }
-                else if (matchedGithubIssue.Title.ToLower().StartsWith("r&d"))
+                else if (title.StartsWith("r&d") || title.StartsWith("rd"))
                 {
                     defaultCoin = _defaultCoinMapping.Where(item => item.Key == "r&d").FirstOrDefault().Value;
                 }
-                else if (matchedGithubIssue.Title.ToLower().StartsWith("develop"))
+                else if (title.StartsWith("develop") || title.StartsWith("feat") || title.StartsWith("feature"))
                 {
                     defaultCoin = _defaultCoinMapping.Where(item => item.Key == "develop").FirstOrDefault().Value;
                 }
-                else if (matchedGithubIssue.Title.ToLower().StartsWith("operation"))
+                else if (title.StartsWith("operation") || title.StartsWith("oper"))
                 {
                     defaultCoin = _defaultCoinMapping.Where(item => item.Key == "operation").FirstOrDefault().Value;
                 }
-                else if (matchedGithubIssue.Title.ToLower().StartsWith("bd"))
+                else if (title.StartsWith("bd"))
                 {
                     defaultCoin = _defaultCoinMapping.Where(item => item.Key == "bd").FirstOrDefault().Value;
                 }
