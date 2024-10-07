@@ -1,57 +1,112 @@
-window.coinIconHtml = '<div class="overflow-hidden" style="width:20px; height: 20px; margin-left: 10px; margin-right: 10px"><img style="width: 100%; height: 100%; object-fit: contain;" src="https://bet.homo.tw/assets/imgs/coin.png" /> </div> X ';
+window.coinIconHtml =
+    '<div class="overflow-hidden" style="width:20px; height: 20px; margin-left: 10px; margin-right: 10px"><img style="width: 100%; height: 100%; object-fit: contain;" src="https://bet.homo.tw/assets/imgs/coin.png" /> </div> X ';
+
 window.injectHead = (betCoins) => {
-    const coinIconHtml = '<div class="overflow-hidden" style="width:20px; height: 20px; margin-left: 10px; margin-right: 10px"><img style="width: 100%; height: 100%; object-fit: contain;" src="https://bet.homo.tw/assets/imgs/coin.png" /> </div> X ';
+    const coinIconHtml =
+        '<div class="overflow-hidden" style="width:20px; height: 20px; margin-left: 10px; margin-right: 10px"><img style="width: 100%; height: 100%; object-fit: contain;" src="https://bet.homo.tw/assets/imgs/coin.png" /> </div> X ';
     const elNotification = document.querySelector('notification-indicator');
     const elDetailMenu = document.querySelector('details-menu');
-    const elHeaderItem = elNotification ? elNotification.parentNode : elDetailMenu.parentNode;
+    const elHeaderItem = elNotification
+        ? elNotification.parentNode
+        : elDetailMenu.parentNode;
     const elHeader = elHeaderItem.parentNode;
 
     if (elHeader.dataset.injected !== 'true') {
         const elHeaderItemBetIcon = document.createElement('div');
-        ['Header-item', 'mr-0', 'mr-md-3', 'flex-order-1', 'flex-md-order-none'].forEach(item => {
+        [
+            'Header-item',
+            'mr-0',
+            'mr-md-3',
+            'flex-order-1',
+            'flex-md-order-none',
+        ].forEach((item) => {
             elHeaderItemBetIcon.classList.add(item);
         });
         elHeaderItemBetIcon.innerHTML = `${coinIconHtml}<span class="homo-bet-coins" style="padding-left:8px;">${betCoins}</span> `;
         elHeaderItemBetIcon.style.whiteSpace = 'nowrap';
         elHeader.insertBefore(elHeaderItemBetIcon, elHeaderItem);
-        elHeaderItemBetIcon.querySelector('.homo-bet-coins').dataset[`${window.variablePrefix}betCoins`] = betCoins;
+        elHeaderItemBetIcon.querySelector('.homo-bet-coins').dataset[
+            `${window.variablePrefix}betCoins`
+        ] = betCoins;
         elHeader.dataset.injected = 'true';
     }
 };
-window.githubProjectStatusChanged = (e, projectId, connectionId, statusFieldId) => {
+window.githubProjectStatusChanged = (
+    e,
+    projectId,
+    connectionId,
+    statusFieldId
+) => {
     const optionId = e.currentTarget.value;
-    chrome.runtime.sendMessage({ action: 'update-github-project-status', projectId, statusFieldId, optionId, connectionId });
+    chrome.runtime.sendMessage({
+        action: 'update-github-project-status',
+        projectId,
+        statusFieldId,
+        optionId,
+        connectionId,
+    });
 };
-window.renderGithubProjectStatusDropDown = (elIssue, githubProjects, githubProjectId, extraData) => {
-    const currentGithubProject = githubProjects.find(item => item.id === githubProjectId);
+window.renderGithubProjectStatusDropDown = (
+    elIssue,
+    githubProjects,
+    githubProjectId,
+    extraData
+) => {
+    const currentGithubProject = githubProjects.find(
+        (item) => item.id === githubProjectId
+    );
     const githubProjectStatusOptions = currentGithubProject
-        ? currentGithubProject.status.map(item => {
-            const selected = extraData.githubOptionId === item.id;
-            return `<option value="${item.id}" ${selected ? 'selected' : ''}>${item.name}</option>`;
-        }).join('')
+        ? currentGithubProject.status
+              .map((item) => {
+                  const selected = extraData.githubOptionId === item.id;
+                  return `<option value="${item.id}" ${
+                      selected ? 'selected' : ''
+                  }>${item.name}</option>`;
+              })
+              .join('')
         : '';
     const githubProjectStatusDropdownList = `<select class="form-control ml-4 github-project-status" ><option>無</option>${githubProjectStatusOptions}</select>`;
     const existsElement = elIssue.querySelector('.github-project-status');
     if (existsElement) {
         existsElement.outerHTML = githubProjectStatusDropdownList;
     } else {
-        elIssue.querySelector('.github-projects').insertAdjacentHTML('afterend', githubProjectStatusDropdownList);
+        elIssue
+            .querySelector('.github-projects')
+            .insertAdjacentHTML('afterend', githubProjectStatusDropdownList);
     }
-    elIssue.querySelector('.github-project-status').addEventListener('change', (e) => {
-        window.githubProjectStatusChanged(e, githubProjectId, extraData.githubConnectionId, extraData.githubStatusFieldId);
-    });
+    elIssue
+        .querySelector('.github-project-status')
+        .addEventListener('change', (e) => {
+            window.githubProjectStatusChanged(
+                e,
+                githubProjectId,
+                extraData.githubConnectionId,
+                extraData.githubStatusFieldId
+            );
+        });
 };
 
-window.injectHTMLToIssueElement = async (elIssue, extraData, githubProjects) => {
+window.injectHTMLToIssueElement = async (
+    elIssue,
+    extraData,
+    githubProjects
+) => {
     const elInjectContainer = elIssue.querySelector('div>div:nth-child(3)');
     const storage = await chrome.storage.sync.get(['userInfo']);
 
     const elTitle = elIssue.querySelector('.markdown-title');
-    const qty = extraData.ownerLockedBet + extraData.ownerFreeBet + extraData.excludeOwnerBet;
-    elIssue.dataset[`${window.variablePrefix}ownerLockedBet`] = extraData.ownerLockedBet;
-    elIssue.dataset[`${window.variablePrefix}ownerFreeBet`] = extraData.ownerFreeBet;
-    elIssue.dataset[`${window.variablePrefix}excludeOwnerBet`] = extraData.excludeOwnerBet;
-    elIssue.dataset[`${window.variablePrefix}currentCoinLogId`] = extraData.currentCoinLogId;
+    const qty =
+        extraData.ownerLockedBet +
+        extraData.ownerFreeBet +
+        extraData.excludeOwnerBet;
+    elIssue.dataset[`${window.variablePrefix}ownerLockedBet`] =
+        extraData.ownerLockedBet;
+    elIssue.dataset[`${window.variablePrefix}ownerFreeBet`] =
+        extraData.ownerFreeBet;
+    elIssue.dataset[`${window.variablePrefix}excludeOwnerBet`] =
+        extraData.excludeOwnerBet;
+    elIssue.dataset[`${window.variablePrefix}currentCoinLogId`] =
+        extraData.currentCoinLogId;
     elIssue.dataset[`${window.variablePrefix}externalId`] = extraData.id;
     let title = '';
     if (elIssue.dataset.injected !== 'true') {
@@ -66,10 +121,14 @@ window.injectHTMLToIssueElement = async (elIssue, extraData, githubProjects) => 
     elTitle.innerHTML = `${title} ${window.coinIconHtml} <span class="subtotal">${qty}</span>`;
     elIssue.classList.add('issue');
     // generate github projects dropdown
-    const githubProjectOptions = githubProjects.map(item => {
-        const selected = extraData.githubProjectId === item.id;
-        return `<option value="${item.id}" ${selected ? 'selected' : ''}>${item.name}</option>`;
-    }).join('');
+    const githubProjectOptions = githubProjects
+        .map((item) => {
+            const selected = extraData.githubProjectId === item.id;
+            return `<option value="${item.id}" ${selected ? 'selected' : ''}>${
+                item.name
+            }</option>`;
+        })
+        .join('');
     const githubProjectDropdownList = `<select class="form-control ml-4 github-projects"><option>無</option>${githubProjectOptions}</select>`;
 
     if (elIssue.querySelectorAll('.buttons').length === 0) {
@@ -128,45 +187,85 @@ window.injectHTMLToIssueElement = async (elIssue, extraData, githubProjects) => 
                 </div>
             `;
         elInjectContainer.append(elButtons);
-        window.renderGithubProjectStatusDropDown(elIssue, githubProjects, extraData.githubProjectId, extraData);
+        window.renderGithubProjectStatusDropDown(
+            elIssue,
+            githubProjects,
+            extraData.githubProjectId,
+            extraData
+        );
 
         // binding github project change
-        elIssue.querySelector('.github-projects').addEventListener('change', (e) => {
-            const githubProjectId = e.currentTarget.value;
-            if (!githubProjectId) {
-                return;
-            }
-            chrome.runtime.sendMessage({ action: 'add-to-project', projectId: githubProjectId, issueId: extraData.githubIssueId, originalProjectId: extraData.githubProjectId, originalConnectionId: extraData.githubConnectionId });
+        elIssue
+            .querySelector('.github-projects')
+            .addEventListener('change', (e) => {
+                const githubProjectId = e.currentTarget.value;
+                if (!githubProjectId) {
+                    return;
+                }
+                chrome.runtime.sendMessage({
+                    action: 'add-to-project',
+                    projectId: githubProjectId,
+                    issueId: extraData.githubIssueId,
+                    originalProjectId: extraData.githubProjectId,
+                    originalConnectionId: extraData.githubConnectionId,
+                });
 
-            // change options
-            window.renderGithubProjectStatusDropDown(elIssue, githubProjects, githubProjectId, extraData);
-        });
+                // change options
+                window.renderGithubProjectStatusDropDown(
+                    elIssue,
+                    githubProjects,
+                    githubProjectId,
+                    extraData
+                );
+            });
 
         if (extraData.assigneeId) {
             elIssue.querySelector('.btn-claim').classList.add('d-none');
             elIssue.querySelector('.assignee').classList.remove('d-none');
-            elIssue.querySelector('.assignee').innerHTML = `${extraData.assignee?.lastName}${extraData.assignee?.firstName}`;
-            elIssue.querySelector('.exptected-finish-at').classList.remove('d-none');
-            elIssue.querySelector('.exptected-finish-at').innerHTML = extraData.expectedFinishAt.substring(0, extraData.expectedFinishAt.indexOf('T'));
-            elIssue.querySelector('.homo-bargaining-minus').classList.add('d-none');
-            elIssue.querySelector('.homo-bargaining-add').classList.remove('d-none');
+            elIssue.querySelector(
+                '.assignee'
+            ).innerHTML = `${extraData.assignee?.lastName}${extraData.assignee?.firstName}`;
+            elIssue
+                .querySelector('.exptected-finish-at')
+                .classList.remove('d-none');
+            elIssue.querySelector('.exptected-finish-at').innerHTML =
+                extraData.expectedFinishAt.substring(
+                    0,
+                    extraData.expectedFinishAt.indexOf('T')
+                );
+            elIssue
+                .querySelector('.homo-bargaining-minus')
+                .classList.add('d-none');
+            elIssue
+                .querySelector('.homo-bargaining-add')
+                .classList.remove('d-none');
         } else {
             elIssue.querySelector('.btn-claim').classList.remove('d-none');
             elIssue.querySelector('.assignee').classList.add('d-none');
             elIssue.querySelector('.assignee').innerHTML = '';
-            elIssue.querySelector('.exptected-finish-at').classList.remove('d-none');
+            elIssue
+                .querySelector('.exptected-finish-at')
+                .classList.remove('d-none');
             elIssue.querySelector('.exptected-finish-at').innerHTML = '';
-            elIssue.querySelector('.homo-bargaining-minus').classList.remove('d-none');
-            elIssue.querySelector('.homo-bargaining-add').classList.remove('d-none');
+            elIssue
+                .querySelector('.homo-bargaining-minus')
+                .classList.remove('d-none');
+            elIssue
+                .querySelector('.homo-bargaining-add')
+                .classList.remove('d-none');
         }
 
         if (extraData.status < 3) {
             const isAssignee = storage.userInfo.id === extraData.assigneeId;
             const beMarkedFinish = extraData.status === 2;
             if (isAssignee && !beMarkedFinish) {
-                elIssue.querySelector('.btn-mark-finish').classList.remove('d-none');
+                elIssue
+                    .querySelector('.btn-mark-finish')
+                    .classList.remove('d-none');
             } else {
-                elIssue.querySelector('.btn-mark-finish').classList.add('d-none');
+                elIssue
+                    .querySelector('.btn-mark-finish')
+                    .classList.add('d-none');
             }
             if (!isAssignee && beMarkedFinish) {
                 elIssue.querySelector('.btn-done').classList.remove('d-none');
@@ -176,98 +275,187 @@ window.injectHTMLToIssueElement = async (elIssue, extraData, githubProjects) => 
         }
 
         if (elIssue.dataset.injected !== 'true') {
-            elIssue.querySelector('.homo-bargaining-add').addEventListener('click', (e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                const elIssue = e.currentTarget.closest('.issue');
-                let ownerFreeBet = Number(elIssue.dataset[`${window.variablePrefix}ownerFreeBet`]);
-                const elBetCoins = document.querySelector('.homo-bet-coins');
-                let betCoins = Number(elBetCoins.dataset[`${window.variablePrefix}betCoins`]);
-                if (betCoins <= 0) {
-                    return;
-                }
-                ownerFreeBet += 1;
-                betCoins -= 1;
-                const ownerLockedBet = Number(elIssue.dataset[`${window.variablePrefix}ownerLockedBet`]);
-                const excludeOwnerBet = Number(elIssue.dataset[`${window.variablePrefix}excludeOwnerBet`]);
-                elIssue.dataset[`${window.variablePrefix}ownerFreeBet`] = ownerFreeBet;
-                elBetCoins.dataset[`${window.variablePrefix}betCoins`] = betCoins;
-                elBetCoins.innerHTML = betCoins;
-                elIssue.querySelector('.subtotal').innerHTML = ownerFreeBet + ownerLockedBet + excludeOwnerBet;
-                const externalId = Number(elIssue.dataset[`${window.variablePrefix}externalId`]);
-                chrome.runtime.sendMessage({ action: 'update-coin', externalId, freeCoins: ownerFreeBet, betCoins });
-            });
-
-            elIssue.querySelector('.homo-bargaining-minus').addEventListener('click', (e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                const elIssue = e.currentTarget.closest('.issue');
-                let ownerFreeBet = Number(elIssue.dataset[`${window.variablePrefix}ownerFreeBet`]);
-                const elBetCoins = document.querySelector('.homo-bet-coins');
-                let betCoins = Number(elBetCoins.dataset[`${window.variablePrefix}betCoins`]);
-                if (ownerFreeBet <= 0) {
-                    return;
-                }
-                ownerFreeBet -= 1;
-                betCoins += 1;
-                const ownerLockedBet = Number(elIssue.dataset[`${window.variablePrefix}ownerLockedBet`]);
-                const excludeOwnerBet = Number(elIssue.dataset[`${window.variablePrefix}excludeOwnerBet`]);
-                elIssue.dataset[`${window.variablePrefix}ownerFreeBet`] = ownerFreeBet;
-                elBetCoins.dataset[`${window.variablePrefix}betCoins`] = betCoins;
-                elBetCoins.innerHTML = betCoins;
-                elIssue.querySelector('.subtotal').innerHTML = ownerFreeBet + ownerLockedBet + excludeOwnerBet;
-                const externalId = Number(elIssue.dataset[`${window.variablePrefix}externalId`]);
-                chrome.runtime.sendMessage({ action: 'update-coin', externalId, freeCoins: ownerFreeBet, betCoins });
-            });
-
-            elIssue.querySelector('.btn-claim').addEventListener('click', (e) => {
-                const elIssue = e.currentTarget.closest('.issue');
-                const externalId = Number(elIssue.dataset[`${window.variablePrefix}externalId`]);
-                const days = prompt('預計完成的時間 days');
-                if (isNaN(days)) {
-                    alert('為填入預計完成時間');
-                }
-                chrome.runtime.sendMessage({ action: 'claim', externalId, workDays: days }, (resp) => {
-                    if (resp.status && resp.status === 'OK') {
-                        elIssue.querySelector('.btn-claim').classList.add('d-none');
-                        elIssue.querySelector('.homo-bargaining-minus').classList.add('d-none');
-                        elIssue.querySelector('.assignee').classList.remove('d-none');
-                        chrome.storage.sync.get(['userInfo']).then((storage) => {
-                            elIssue.querySelector('.assignee').innerHTML = `${storage.userInfo.lastName}${storage.userInfo.firstName}`;
-                        });
-                        elIssue.querySelector('.exptected-finish-at').classList.remove('d-none');
-                        const result = new Date();
-                        result.setDate(result.getDate() + Number(days));
-                        elIssue.querySelector('.exptected-finish-at').innerHTML = result.toLocaleDateString();
+            elIssue
+                .querySelector('.homo-bargaining-add')
+                .addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    const elIssue = e.currentTarget.closest('.issue');
+                    let ownerFreeBet = Number(
+                        elIssue.dataset[`${window.variablePrefix}ownerFreeBet`]
+                    );
+                    const elBetCoins =
+                        document.querySelector('.homo-bet-coins');
+                    let betCoins = Number(
+                        elBetCoins.dataset[`${window.variablePrefix}betCoins`]
+                    );
+                    if (betCoins <= 0) {
                         return;
                     }
-                    alert(resp.message);
+                    ownerFreeBet += 1;
+                    betCoins -= 1;
+                    const ownerLockedBet = Number(
+                        elIssue.dataset[
+                            `${window.variablePrefix}ownerLockedBet`
+                        ]
+                    );
+                    const excludeOwnerBet = Number(
+                        elIssue.dataset[
+                            `${window.variablePrefix}excludeOwnerBet`
+                        ]
+                    );
+                    elIssue.dataset[`${window.variablePrefix}ownerFreeBet`] =
+                        ownerFreeBet;
+                    elBetCoins.dataset[`${window.variablePrefix}betCoins`] =
+                        betCoins;
+                    elBetCoins.innerHTML = betCoins;
+                    elIssue.querySelector('.subtotal').innerHTML =
+                        ownerFreeBet + ownerLockedBet + excludeOwnerBet;
+                    const externalId = Number(
+                        elIssue.dataset[`${window.variablePrefix}externalId`]
+                    );
+                    chrome.runtime.sendMessage({
+                        action: 'update-coin',
+                        externalId,
+                        freeCoins: ownerFreeBet,
+                        betCoins,
+                    });
                 });
-            });
 
-            elIssue.querySelector('.btn-mark-finish').addEventListener('click', (e) => {
-                const elIssue = e.currentTarget.closest('.issue');
-                const externalId = Number(elIssue.dataset[`${window.variablePrefix}externalId`]);
-                chrome.runtime.sendMessage({ action: 'mark-finish', externalId }, (resp) => {
-                    if (resp.status && resp.status === 'OK') {
-                        elIssue.querySelector('.btn-mark-finish').classList.add('d-none');
+            elIssue
+                .querySelector('.homo-bargaining-minus')
+                .addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    const elIssue = e.currentTarget.closest('.issue');
+                    let ownerFreeBet = Number(
+                        elIssue.dataset[`${window.variablePrefix}ownerFreeBet`]
+                    );
+                    const elBetCoins =
+                        document.querySelector('.homo-bet-coins');
+                    let betCoins = Number(
+                        elBetCoins.dataset[`${window.variablePrefix}betCoins`]
+                    );
+                    if (ownerFreeBet <= 0) {
                         return;
                     }
-                    alert(resp.message);
+                    ownerFreeBet -= 1;
+                    betCoins += 1;
+                    const ownerLockedBet = Number(
+                        elIssue.dataset[
+                            `${window.variablePrefix}ownerLockedBet`
+                        ]
+                    );
+                    const excludeOwnerBet = Number(
+                        elIssue.dataset[
+                            `${window.variablePrefix}excludeOwnerBet`
+                        ]
+                    );
+                    elIssue.dataset[`${window.variablePrefix}ownerFreeBet`] =
+                        ownerFreeBet;
+                    elBetCoins.dataset[`${window.variablePrefix}betCoins`] =
+                        betCoins;
+                    elBetCoins.innerHTML = betCoins;
+                    elIssue.querySelector('.subtotal').innerHTML =
+                        ownerFreeBet + ownerLockedBet + excludeOwnerBet;
+                    const externalId = Number(
+                        elIssue.dataset[`${window.variablePrefix}externalId`]
+                    );
+                    chrome.runtime.sendMessage({
+                        action: 'update-coin',
+                        externalId,
+                        freeCoins: ownerFreeBet,
+                        betCoins,
+                    });
                 });
-            });
 
-            elIssue.querySelector('.btn-done').addEventListener('click', (e) => {
-                const elIssue = e.currentTarget.closest('.issue');
-                const externalId = Number(elIssue.dataset[`${window.variablePrefix}externalId`]);
-                chrome.runtime.sendMessage({ action: 'done', externalId }, (resp) => {
-                    if (resp.status && resp.status === 'OK') {
-                        elIssue.querySelector('.btn-done').classList.add('d-none');
-                        return;
+            elIssue
+                .querySelector('.btn-claim')
+                .addEventListener('click', (e) => {
+                    const elIssue = e.currentTarget.closest('.issue');
+                    const externalId = Number(
+                        elIssue.dataset[`${window.variablePrefix}externalId`]
+                    );
+                    const days = prompt('預計完成的時間 days');
+                    if (isNaN(days)) {
+                        alert('為填入預計完成時間');
                     }
-                    alert(resp.message);
+                    chrome.runtime.sendMessage(
+                        { action: 'claim', externalId, workDays: days },
+                        (resp) => {
+                            if (resp.status && resp.status === 'OK') {
+                                elIssue
+                                    .querySelector('.btn-claim')
+                                    .classList.add('d-none');
+                                elIssue
+                                    .querySelector('.homo-bargaining-minus')
+                                    .classList.add('d-none');
+                                elIssue
+                                    .querySelector('.assignee')
+                                    .classList.remove('d-none');
+                                chrome.storage.sync
+                                    .get(['userInfo'])
+                                    .then((storage) => {
+                                        elIssue.querySelector(
+                                            '.assignee'
+                                        ).innerHTML = `${storage.userInfo.lastName}${storage.userInfo.firstName}`;
+                                    });
+                                elIssue
+                                    .querySelector('.exptected-finish-at')
+                                    .classList.remove('d-none');
+                                const result = new Date();
+                                result.setDate(result.getDate() + Number(days));
+                                elIssue.querySelector(
+                                    '.exptected-finish-at'
+                                ).innerHTML = result.toLocaleDateString();
+                                return;
+                            }
+                            alert(resp.message);
+                        }
+                    );
                 });
-            });
+
+            elIssue
+                .querySelector('.btn-mark-finish')
+                .addEventListener('click', (e) => {
+                    const elIssue = e.currentTarget.closest('.issue');
+                    const externalId = Number(
+                        elIssue.dataset[`${window.variablePrefix}externalId`]
+                    );
+                    chrome.runtime.sendMessage(
+                        { action: 'mark-finish', externalId },
+                        (resp) => {
+                            if (resp.status && resp.status === 'OK') {
+                                elIssue
+                                    .querySelector('.btn-mark-finish')
+                                    .classList.add('d-none');
+                                return;
+                            }
+                            alert(resp.message);
+                        }
+                    );
+                });
+
+            elIssue
+                .querySelector('.btn-done')
+                .addEventListener('click', (e) => {
+                    const elIssue = e.currentTarget.closest('.issue');
+                    const externalId = Number(
+                        elIssue.dataset[`${window.variablePrefix}externalId`]
+                    );
+                    chrome.runtime.sendMessage(
+                        { action: 'done', externalId },
+                        (resp) => {
+                            if (resp.status && resp.status === 'OK') {
+                                elIssue
+                                    .querySelector('.btn-done')
+                                    .classList.add('d-none');
+                                return;
+                            }
+                            alert(resp.message);
+                        }
+                    );
+                });
         }
         elIssue.dataset.injected = 'true';
     }
@@ -275,28 +463,50 @@ window.injectHTMLToIssueElement = async (elIssue, extraData, githubProjects) => 
 
 window.injectIssuesButton = async (elIssues) => {
     const externalIds = [];
-    elIssues.forEach(elIssue => {
+    elIssues.forEach((elIssue) => {
         const elLink = elIssue.querySelector('div>a');
         const externalId = elLink.id.split('_')[1];
         elIssue.dataset.id = externalId;
         externalIds.push(externalId);
     });
-    chrome.runtime.sendMessage({ action: 'get-tasks-and-renew', externalIds }, (issues) => {
-        chrome.runtime.sendMessage({ action: 'get-github-projects' }, (githubProjects) => {
-            issues.forEach(issue => {
-                const elIssue = document.querySelector(`[id="issue_${issue.externalId}"]`);
-                window.injectHTMLToIssueElement(elIssue, issue, githubProjects);
-            });
-        });
-    });
+    chrome.runtime.sendMessage(
+        { action: 'get-tasks-and-renew', externalIds },
+        (issues) => {
+            chrome.runtime.sendMessage(
+                { action: 'get-github-projects' },
+                (githubProjects) => {
+                    issues.forEach((issue) => {
+                        const elIssue = document.querySelector(
+                            `[id="issue_${issue.externalId}"]`
+                        );
+                        window.injectHTMLToIssueElement(
+                            elIssue,
+                            issue,
+                            githubProjects
+                        );
+                    });
+                }
+            );
+        }
+    );
 };
 
 window.variablePrefix = 'homo.bet.';
-if (location.origin === 'https://github.com' && location.pathname === '/homo-tw/itemhub/issues') {
+if (
+    location.origin === 'https://github.com' &&
+    location.pathname.startsWith('/homo-tw/itemhub/issues')
+) {
     (async () => {
-        const storage = await chrome.storage.sync.get(['token', 'userInfo', 'earnCoins', 'betCoins']);
+        const storage = await chrome.storage.sync.get([
+            'token',
+            'userInfo',
+            'earnCoins',
+            'betCoins',
+        ]);
         window.injectHead(storage.betCoins);
-        const elIssues = document.querySelectorAll('[aria-label="Issues"] > div > div');
+        const elIssues = document.querySelectorAll(
+            '[aria-label="Issues"] > div > div'
+        );
         window.injectIssuesButton(elIssues);
         // elIssues.forEach(async (elIssue) => {
         //     window.injectIssueButton(elIssue);
