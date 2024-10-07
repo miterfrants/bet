@@ -92,7 +92,7 @@ namespace Homo.Bet.Api
                             FieldId = projects.Count > 0 ? projects[0]["field"]["id"] : null,
                             ConnectionId = projectEdges.Count > 0 ? projectEdges[0]["node"]["id"] : null,
                             OptionId = projectItems.Count > 0 ? projectItems[0]["fieldValueByName"]["optionId"] : null,
-                            Title = projects.Count > 0 ? projects[0]["node"]["title"] : null
+                            Title = (string)item["title"]
                         };
                     }).ToList();
             }
