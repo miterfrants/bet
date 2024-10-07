@@ -70,6 +70,7 @@ namespace Homo.Bet.Api
                             id = item["node"]["number"],
                             assignee = assignees.FirstOrDefault(),
                             status = item["node"]["projectItems"]["nodes"].Count > 0 && item["node"]["projectItems"]["nodes"][0]["fieldValueByName"] != null ? item["node"]["projectItems"]["nodes"][0]["fieldValueByName"]["name"] : null,
+                            deadline = DateTime.Now
                         };
                     }).ToList();
 
@@ -112,8 +113,7 @@ namespace Homo.Bet.Api
                             return item.assignee == asignee && item.assignee != matchedBetTask?.Assignee?.Username && matchedBetTask?.Assignee != null && item.assignee != null;
                         }).ToList();
                         var reviewMessage = diffAsigneeIssues.Count() > 0 ? $"\\n### 需要 Review 的 Issues: \\n{string.Join("\\n", diffAsigneeIssues.Select(item => $"- [{item.title}]({item.url})"))}" : "";
-
-                        var inProgressIssues = issues.Where(item =>
+                        var test = issues.Where(item =>
                         {
                             var matchedBetTask = betTasks.Where(task => task.ExternalId == (string)item.id).FirstOrDefault();
                             if (matchedBetTask.Assignee?.Username != asignee)
@@ -122,8 +122,27 @@ namespace Homo.Bet.Api
                             }
                             return item.assignee == asignee && item.status == "In Progress";
                         }).ToList();
-                        var inProgressMessage = inProgressIssues.Count() > 0 ? $"\\n### 正在執行的任務: \\n{string.Join("\\n", inProgressIssues.Select(item => $"- [{item.title}]({item.url})"))}" : "";
+                        var inProgressIssues = issues.Where(item =>
+                        {
+                            var matchedBetTask = betTasks.Where(task => task.ExternalId == (string)item.id).FirstOrDefault();
+                            if (matchedBetTask.Assignee?.Username != asignee)
+                            {
+                                return false;
+                            }
+                            return item.assignee == asignee && item.status == "In Progress";
+                        }).Select(item =>
+                         {
+                             var matchedBetTask = betTasks.Where(task => task.ExternalId == (string)item.id).FirstOrDefault();
+                             return new
+                             {
+                                 item.title,
+                                 item.assignee,
+                                 item.url,
+                                 deadline = matchedBetTask.ExpectedFinishAt
+                             };
+                         }).ToList();
 
+                        var inProgressMessage = inProgressIssues.Count() > 0 ? $"\\n### 正在執行的任務: \\n{string.Join("\\n", inProgressIssues.Select(item => $"- [{item.title}]({item.url}) Deadline: {item.deadline}"))}" : "";
                         if (string.IsNullOrEmpty(unClaimMessage) && string.IsNullOrEmpty(thisWeekMessage) && string.IsNullOrEmpty(reviewMessage) && string.IsNullOrEmpty(inProgressMessage))
                         {
                             continue;
@@ -132,9 +151,11 @@ namespace Homo.Bet.Api
                         {
                             continue;
                         }
+
                         var endLine = $"\\n\\n\\n";
                         var resp = await _httpClient.PostAsync(_discordWebhook, new StringContent($@"{{""content"":""## <@{githubAccountAndDiscordAccountMapping[asignee]}>\n{unClaimMessage}{thisWeekMessage}{reviewMessage}{inProgressMessage}{endLine}""}}", Encoding.UTF8, "application/json"), CancellationToken.None);
                         var respBody = await resp.Content.ReadAsStringAsync();
+                        System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(respBody, Newtonsoft.Json.Formatting.Indented)}");
                     }
 
                 }

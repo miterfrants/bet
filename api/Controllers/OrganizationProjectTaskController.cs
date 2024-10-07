@@ -9,6 +9,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Homo.Bet.Api
 {
+
     [AuthorizeFactory]
     [BelongOrgFactory]
     [Route("v1/organizations/{organizationId}/projects/{projectId}/tasks")]
@@ -16,6 +17,7 @@ namespace Homo.Bet.Api
     {
         private readonly BargainingChipDBContext _dbContext;
         private readonly string _githubToken;
+        private readonly Dictionary<string, int> _defaultCoinMapping = new Dictionary<string, int>() { { "planning", 4 }, { "r&d", 10 }, { "develop", 5 }, { "operation", 3 }, { "bd", 10 } };
         public TaskController(BargainingChipDBContext dbContext, IOptions<AppSettings> options)
         {
             _dbContext = dbContext;
@@ -90,9 +92,46 @@ namespace Homo.Bet.Api
                             FieldId = projects.Count > 0 ? projects[0]["field"]["id"] : null,
                             ConnectionId = projectEdges.Count > 0 ? projectEdges[0]["node"]["id"] : null,
                             OptionId = projectItems.Count > 0 ? projectItems[0]["fieldValueByName"]["optionId"] : null,
+                            Title = projects.Count > 0 ? projects[0]["node"]["title"] : null
                         };
                     }).ToList();
             }
+
+            // create default coins 
+            newTasks.ForEach(task =>
+            {
+                var matchedGithubIssue = githubIssues.Where(issue => issue.Number == task.ExternalId).FirstOrDefault();
+                if (matchedGithubIssue == null)
+                {
+                    return;
+                }
+                int defaultCoin = 0;
+                if (matchedGithubIssue.Title.ToLower().StartsWith("planning"))
+                {
+                    defaultCoin = _defaultCoinMapping.Where(item => item.Key == "planning").FirstOrDefault().Value;
+                }
+                else if (matchedGithubIssue.Title.ToLower().StartsWith("r&d"))
+                {
+                    defaultCoin = _defaultCoinMapping.Where(item => item.Key == "r&d").FirstOrDefault().Value;
+                }
+                else if (matchedGithubIssue.Title.ToLower().StartsWith("develop"))
+                {
+                    defaultCoin = _defaultCoinMapping.Where(item => item.Key == "develop").FirstOrDefault().Value;
+                }
+                else if (matchedGithubIssue.Title.ToLower().StartsWith("operation"))
+                {
+                    defaultCoin = _defaultCoinMapping.Where(item => item.Key == "operation").FirstOrDefault().Value;
+                }
+                else if (matchedGithubIssue.Title.ToLower().StartsWith("bd"))
+                {
+                    defaultCoin = _defaultCoinMapping.Where(item => item.Key == "bd").FirstOrDefault().Value;
+                }
+
+                CoinsLogDataService.Create(_dbContext, 7, task.Id, 7, COIN_LOG_TYPE.BET, new DTOs.CoinLog()
+                {
+                    Qty = defaultCoin
+                });
+            });
 
             var betLogs = CoinsLogDataService.GetAllByTaskIds(_dbContext, allTask.Select(item => { long? result; result = item.Id; return result; }).ToList(), COIN_LOG_TYPE.BET);
             return allTask.Select(task =>
@@ -248,6 +287,7 @@ namespace Homo.Bet.Api
         public string FieldId { get; set; }
         public string OptionId { get; set; }
         public string ConnectionId { get; set; }
+        public string Title { get; set; }
         public List<GithubProjectStatusOption> Options { get; set; }
     }
 
