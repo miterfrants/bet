@@ -274,7 +274,7 @@ namespace Homo.Bet.Api
             {
                 bonus = 1;
             }
-            CoinsLogDataService.Create(_dbContext, extraPayload.Id, task.Id, extraPayload.Id, COIN_LOG_TYPE.EARN, new DTOs.CoinLog() { Qty = -bonus });
+            CoinsLogDataService.Create(_dbContext, extraPayload.Id, task.Id, extraPayload.Id, COIN_LOG_TYPE.EARN, new DTOs.CoinLog() { Qty = bonus });
             return new { status = Homo.Core.Constants.CUSTOM_RESPONSE.OK };
         }
     }
