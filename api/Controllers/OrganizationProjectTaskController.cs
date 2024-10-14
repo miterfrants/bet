@@ -17,7 +17,7 @@ namespace Homo.Bet.Api
     {
         private readonly BargainingChipDBContext _dbContext;
         private readonly string _githubToken;
-        private readonly Dictionary<string, int> _defaultCoinMapping = new Dictionary<string, int>() { { "planning", 4 }, { "r&d", 10 }, { "develop", 5 }, { "operation", 3 }, { "bd", 10 } };
+        private readonly Dictionary<string, int> _defaultCoinMapping = new Dictionary<string, int>() { { "planning", 4 }, { "plan", 4 }, { "r&d", 10 }, { "rd", 10 }, { "develop", 5 }, { "marketing", 3 }, { "operation", 3 }, { "bd", 10 }, { "bug", 2 } };
         public TaskController(BargainingChipDBContext dbContext, IOptions<AppSettings> options)
         {
             _dbContext = dbContext;
@@ -126,6 +126,14 @@ namespace Homo.Bet.Api
                 else if (title.StartsWith("bd"))
                 {
                     defaultCoin = _defaultCoinMapping.Where(item => item.Key == "bd").FirstOrDefault().Value;
+                }
+                else if (title.StartsWith("bug"))
+                {
+                    defaultCoin = _defaultCoinMapping.Where(item => item.Key == "bug").FirstOrDefault().Value;
+                }
+                else if (title.StartsWith("marketing"))
+                {
+                    defaultCoin = _defaultCoinMapping.Where(item => item.Key == "marketing").FirstOrDefault().Value;
                 }
 
                 CoinsLogDataService.Create(_dbContext, 7, task.Id, 7, COIN_LOG_TYPE.BET, new DTOs.CoinLog()
@@ -244,6 +252,19 @@ namespace Homo.Bet.Api
                 throw new Homo.Core.Constants.CustomException(ERROR_CODE.TASK_HAS_CLAIMED, System.Net.HttpStatusCode.NotFound);
             }
             TaskDataservice.MarkFinish(_dbContext, task);
+            if (extraPayload.Id == 4 || extraPayload.Id == 5)
+            {
+                var username = extraPayload.Id == 4 ? "miterfrants" : "vickychou99";
+                using (HttpClient githubClient = new HttpClient())
+                {
+                    githubClient.DefaultRequestHeaders.UserAgent.TryParseAdd("request");
+                    githubClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Token", _githubToken);
+                    var httpContent = new StringContent($@"{{""assignees"":[""{username}""]}}", System.Text.Encoding.UTF8, "application/json");
+                    var url = $"https://api.github.com/repos/homo-tw/itemhub/issues/{task.ExternalId}/assignees";
+                    var response = githubClient.PostAsync(url, httpContent);
+                    System.Console.WriteLine(response.GetAwaiter().GetResult().Content.ReadAsStringAsync().GetAwaiter().GetResult());
+                }
+            }
             return new { status = Homo.Core.Constants.CUSTOM_RESPONSE.OK };
         }
 
