@@ -138,7 +138,7 @@ namespace Homo.Bet.Api
 
                 CoinsLogDataService.Create(_dbContext, 7, task.Id, 7, COIN_LOG_TYPE.BET, new DTOs.CoinLog()
                 {
-                    Qty = defaultCoin
+                    Qty = -defaultCoin
                 });
             });
 
