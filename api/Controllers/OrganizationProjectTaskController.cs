@@ -78,8 +78,9 @@ namespace Homo.Bet.Api
                 var httpContent = new StringContent(@$"{{""query"":""{{ organization(login: \""homo-tw\"") {{ repository(name: \""itemhub\"") {{ issues(first: 40, states: OPEN, orderBy: {{field: CREATED_AT, direction: DESC}}) {{ nodes {{ number, id, title, closed, projectItems(first: 20) {{ edges {{ node {{id}} }},nodes {{ fieldValueByName(name: \""Status\"") {{ ... on ProjectV2ItemFieldSingleSelectValue {{name, optionId}} }} }} }}, projectsV2(first:20) {{ nodes{{ id, title, field(name: \""Status\"") {{ ... on ProjectV2SingleSelectField {{ name, id }} }} }} }} }} }} }} }} }}""}}", System.Text.Encoding.UTF8, "application/json");
                 HttpResponseMessage response = await githubClient.PostAsync(url, httpContent);
                 string jsonResponse = await response.Content.ReadAsStringAsync();
+                System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(jsonResponse, Newtonsoft.Json.Formatting.Indented)}");
                 JObject graphqlResponse = JObject.Parse(jsonResponse);
-                System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(graphqlResponse["data"], Newtonsoft.Json.Formatting.Indented)}");
+
                 githubIssues = graphqlResponse["data"]["organization"]["repository"]["issues"]["nodes"].ToList<dynamic>().Where(item => (bool)item.closed != true).Select(item =>
                     {
                         var projects = ((JArray)item["projectsV2"]["nodes"]).ToList<dynamic>();
