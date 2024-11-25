@@ -79,7 +79,7 @@ namespace Homo.Bet.Api
                 HttpResponseMessage response = await githubClient.PostAsync(url, httpContent);
                 string jsonResponse = await response.Content.ReadAsStringAsync();
                 JObject graphqlResponse = JObject.Parse(jsonResponse);
-                System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(graphqlResponse["data"]["organization"]["repository"]["issues"], Newtonsoft.Json.Formatting.Indented)}");
+                System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(graphqlResponse["data"], Newtonsoft.Json.Formatting.Indented)}");
                 githubIssues = graphqlResponse["data"]["organization"]["repository"]["issues"]["nodes"].ToList<dynamic>().Where(item => (bool)item.closed != true).Select(item =>
                     {
                         var projects = ((JArray)item["projectsV2"]["nodes"]).ToList<dynamic>();
