@@ -292,7 +292,7 @@ namespace Homo.Bet.Api
             int coins = CoinsLogDataService.GetTaskBetCoins(_dbContext, task.Id);
             CoinsLogDataService.Create(_dbContext, task.AssigneeId.GetValueOrDefault(), task.Id, extraPayload.Id, COIN_LOG_TYPE.EARN, new DTOs.CoinLog() { Qty = -coins });
 
-            int bonus = coins == 0 ? 0 : (int)System.Math.Ceiling(((decimal)coins / (decimal)5));
+            int bonus = coins == 0 ? 0 : (int)System.Math.Ceiling(((decimal)System.Math.Abs(coins) / (decimal)5));
             if (bonus <= 0)
             {
                 bonus = 1;
