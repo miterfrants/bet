@@ -19,8 +19,9 @@ namespace Homo.Bet.Api
         }
 
         [HttpPost]
-        public async Task<dynamic> Webhook([FromBody] GithubIssueWebhook body)
+        public async Task<dynamic> Webhook([FromBody] dynamic body)
         {
+            System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(body, Newtonsoft.Json.Formatting.Indented)}");
             if (body.action != "opened")
             {
                 return new { };
