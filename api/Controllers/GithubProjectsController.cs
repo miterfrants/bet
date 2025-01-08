@@ -27,7 +27,7 @@ namespace Homo.Bet.Api
             {
                 githubClient.DefaultRequestHeaders.UserAgent.TryParseAdd("request");
                 githubClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Token", _githubToken);
-                var httpContent = new StringContent(@"{""query"":""{    organization(login: \""homo-tw\"") { projectsV2(first:20) { nodes{ id, number, url, title, closed, field(name:\""Status\"") { ... on ProjectV2SingleSelectField { options { name, id } } } } } }  }""}", System.Text.Encoding.UTF8, "application/json");
+                var httpContent = new StringContent(@"{""query"":""{    organization(login: \""homo-tw\"") { projectsV2(first:20) { nodes{ id, number, url, title, closed, field(name:\""Status\"") { ... on ProjectV2SingleSelectField { id, options { name, id } } } } } }  }""}", System.Text.Encoding.UTF8, "application/json");
                 string url = $"https://api.github.com/graphql";
                 HttpResponseMessage response = await githubClient.PostAsync(url, httpContent);
                 var responseBody = await response.Content.ReadAsStringAsync();
@@ -35,6 +35,7 @@ namespace Homo.Bet.Api
                 var projects = graphqlResponse["data"]["organization"]["projectsV2"]["nodes"].Where(item => (bool)item["closed"] == false).ToList<dynamic>().Select(item =>
                     {
                         List<dynamic> rawStatus = ((JArray)item["field"]["options"]).ToList<dynamic>();
+                        string statusFieldId = item["field"]["id"].ToString();
                         var status = rawStatus.Select(option =>
                             {
                                 return new GithubStatus
@@ -47,7 +48,8 @@ namespace Homo.Bet.Api
                         {
                             Name = item["title"],
                             Id = item["id"],
-                            Status = status
+                            Status = status,
+			    StatusFieldId = statusFieldId
                         };
                     }).ToList(); ;
                 result.AddRange(projects);
@@ -75,9 +77,10 @@ namespace Homo.Bet.Api
                 response = await githubClient.PostAsync(url, httpContent);
 
                 var responseBody = await response.Content.ReadAsStringAsync();
+		System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(responseBody, Newtonsoft.Json.Formatting.Indented)}");
                 result = JObject.Parse(responseBody);
-            }
-            return result;
+  	    }
+            return new {ConnectionId = result["data"]["addProjectV2ItemById"]["item"]["id"].ToString()};
         }
 
         [HttpPost]
@@ -105,6 +108,7 @@ public class GithubProject
     public string Name { get; set; }
     public string Id { get; set; }
     public List<GithubStatus> Status { get; set; }
+    public string StatusFieldId { get; set; }
 }
 
 public class GithubStatus
