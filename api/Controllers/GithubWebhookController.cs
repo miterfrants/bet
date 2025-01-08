@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -19,8 +18,7 @@ namespace Homo.Bet.Api
         }
 
         [HttpPost]
-        [Consumes("application/x-www-form-urlencoded")]
-        public async Task<dynamic> Webhook([FromForm] GithubIssueWebhook body)
+        public ActionResult<dynamic> Webhook([FromBody] GithubIssueWebhook body)
         {
             System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(body, Newtonsoft.Json.Formatting.Indented)}");
             if (body.action != "opened")
@@ -30,7 +28,7 @@ namespace Homo.Bet.Api
             var newTasks = TaskDataservice.BatchCreate(_dbContext, 6, 5, new List<DTOs.Task>{new DTOs.Task(){
                 Name = "",
                 Type = TASK_TYPE.GITHUB,
-                ExternalId = body.issue.number
+                ExternalId = body.issue.number.ToString()
             }});
 
             int defaultCoin = 0;
@@ -82,6 +80,6 @@ public class GithubIssueWebhook
 
 public class GithubIssue
 {
-    public string number { get; set; }
+    public int number { get; set; }
     public string title { get; set; }
 }
