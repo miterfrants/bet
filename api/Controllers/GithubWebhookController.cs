@@ -20,7 +20,6 @@ namespace Homo.Bet.Api
         [HttpPost]
         public ActionResult<dynamic> Webhook([FromBody] GithubIssueWebhook body)
         {
-            System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(body, Newtonsoft.Json.Formatting.Indented)}");
             if (body.action != "opened")
             {
                 return new { };
