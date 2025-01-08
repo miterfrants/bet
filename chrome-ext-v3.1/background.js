@@ -22,7 +22,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
     if (req.action === 'get-tasks-and-renew') {
         chrome.storage.sync.get(['token']).then((storage) => {
-            getTasksAndRenew(storage.token, req.externalIds).then((issues) => {
+            getTasks(storage.token, req.externalIds).then((issues) => {
                 sendResponse(issues);
             });
         });
@@ -212,7 +212,7 @@ async function updateCoinLog(token, externalId, freeCoins, betCoins, callback) {
     callback(resp);
 }
 
-async function getTasksAndRenew(token, externalIds) {
+async function getTasks(token, externalIds) {
     const option = {
         method: 'POST',
         headers: {
@@ -222,7 +222,7 @@ async function getTasksAndRenew(token, externalIds) {
         body: JSON.stringify(externalIds),
     };
     const resp = await fetch(
-        `${API.ENDPOINT}/organizations/2/projects/6/tasks/get-list-and-renew`,
+        `${API.ENDPOINT}/organizations/2/projects/6/tasks/get-list`,
         option
     );
     if (resp.status === 200) {

@@ -46,19 +46,11 @@ namespace Homo.Bet.Api
         }
 
         [HttpPost]
-        [Route("get-list-and-renew")]
-        public async Task<dynamic> GetListAndRenew([FromRoute] long organizationId, [FromRoute] long projectId, [FromBody] List<string> extIds, Homo.Bet.Api.DTOs.JwtExtraPayload extraPayload)
+        [Route("get-list")]
+        public async Task<dynamic> GetList([FromRoute] long organizationId, [FromRoute] long projectId, [FromBody] List<string> extIds, Homo.Bet.Api.DTOs.JwtExtraPayload extraPayload)
         {
             var tasks = TaskDataservice.GetListByExternalIds(_dbContext, projectId, extIds);
             var taskExtIds = tasks.Select(task => task.ExternalId);
-            // should be create 
-            var shouldBeAddedItems = extIds.Where(extId => !taskExtIds.Contains(extId)).Select(item => new DTOs.Task()
-            {
-                Name = "",
-                Type = TASK_TYPE.GITHUB,
-                ExternalId = item
-            }).ToList();
-            var newTasks = TaskDataservice.BatchCreate(_dbContext, projectId, extraPayload.Id, shouldBeAddedItems);
 
             // should be delete 
             var shouldBeDeletedIds = tasks.Where(task => !extIds.Contains(task.ExternalId)).Select(item => item.Id).ToList();
@@ -66,7 +58,6 @@ namespace Homo.Bet.Api
 
             var allTask = new List<Task>();
             allTask.AddRange(tasks);
-            allTask.AddRange(newTasks);
 
             var githubIssues = new List<GithubIssueIdentify>();
             // get github issue project and status and relation of project and issues;
@@ -98,51 +89,6 @@ namespace Homo.Bet.Api
                         };
                     }).ToList();
             }
-
-            // create default coins 
-            newTasks.ForEach(task =>
-            {
-                var matchedGithubIssue = githubIssues.Where(issue => issue.Number == task.ExternalId).FirstOrDefault();
-                if (matchedGithubIssue == null)
-                {
-                    return;
-                }
-                int defaultCoin = 0;
-                var title = matchedGithubIssue.Title.ToLower();
-                if (title.StartsWith("planning") || title.StartsWith("plan"))
-                {
-                    defaultCoin = _defaultCoinMapping.Where(item => item.Key == "planning").FirstOrDefault().Value;
-                }
-                else if (title.StartsWith("r&d") || title.StartsWith("rd"))
-                {
-                    defaultCoin = _defaultCoinMapping.Where(item => item.Key == "r&d").FirstOrDefault().Value;
-                }
-                else if (title.StartsWith("develop") || title.StartsWith("feat") || title.StartsWith("feature"))
-                {
-                    defaultCoin = _defaultCoinMapping.Where(item => item.Key == "develop").FirstOrDefault().Value;
-                }
-                else if (title.StartsWith("operation") || title.StartsWith("oper"))
-                {
-                    defaultCoin = _defaultCoinMapping.Where(item => item.Key == "operation").FirstOrDefault().Value;
-                }
-                else if (title.StartsWith("bd"))
-                {
-                    defaultCoin = _defaultCoinMapping.Where(item => item.Key == "bd").FirstOrDefault().Value;
-                }
-                else if (title.StartsWith("bug"))
-                {
-                    defaultCoin = _defaultCoinMapping.Where(item => item.Key == "bug").FirstOrDefault().Value;
-                }
-                else if (title.StartsWith("marketing"))
-                {
-                    defaultCoin = _defaultCoinMapping.Where(item => item.Key == "marketing").FirstOrDefault().Value;
-                }
-
-                CoinsLogDataService.Create(_dbContext, 7, task.Id, 7, COIN_LOG_TYPE.BET, new DTOs.CoinLog()
-                {
-                    Qty = -defaultCoin
-                });
-            });
 
             var betLogs = CoinsLogDataService.GetAllByTaskIds(_dbContext, allTask.Select(item => { long? result; result = item.Id; return result; }).ToList(), COIN_LOG_TYPE.BET);
             return allTask.Select(task =>
