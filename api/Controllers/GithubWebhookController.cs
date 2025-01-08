@@ -21,18 +21,18 @@ namespace Homo.Bet.Api
         [HttpPost]
         public async Task<dynamic> Webhook([FromBody] GithubIssueWebhook body)
         {
-            if (body.Action != "opened")
+            if (body.action != "opened")
             {
                 return new { };
             }
             var newTasks = TaskDataservice.BatchCreate(_dbContext, 6, 5, new List<DTOs.Task>{new DTOs.Task(){
                 Name = "",
                 Type = TASK_TYPE.GITHUB,
-                ExternalId = body.Issue.Number
+                ExternalId = body.issue.number
             }});
 
             int defaultCoin = 0;
-            var title = body.Issue.Title.ToLower();
+            var title = body.issue.title.ToLower();
             if (title.StartsWith("planning") || title.StartsWith("plan"))
             {
                 defaultCoin = _defaultCoinMapping.Where(item => item.Key == "planning").FirstOrDefault().Value;
@@ -74,12 +74,12 @@ namespace Homo.Bet.Api
 
 public class GithubIssueWebhook
 {
-    public string Action { get; set; }
-    public GithubIssue Issue { get; set; }
+    public string action { get; set; }
+    public GithubIssue issue { get; set; }
 }
 
 public class GithubIssue
 {
-    public string Number { get; set; }
-    public string Title { get; set; }
+    public string number { get; set; }
+    public string title { get; set; }
 }
