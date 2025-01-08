@@ -155,7 +155,6 @@ namespace Homo.Bet.Api
                         var endLine = $"\\n\\n\\n";
                         var resp = await _httpClient.PostAsync(_discordWebhook, new StringContent($@"{{""content"":""## <@{githubAccountAndDiscordAccountMapping[asignee]}>\n{unClaimMessage}{thisWeekMessage}{reviewMessage}{inProgressMessage}{endLine}""}}", Encoding.UTF8, "application/json"), CancellationToken.None);
                         var respBody = await resp.Content.ReadAsStringAsync();
-                        System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(respBody, Newtonsoft.Json.Formatting.Indented)}");
                     }
 
                 }

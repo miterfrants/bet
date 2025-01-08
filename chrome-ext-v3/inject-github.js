@@ -31,12 +31,7 @@ window.injectHead = (betCoins) => {
         elHeader.dataset.injected = 'true';
     }
 };
-window.githubProjectStatusChanged = (
-    e,
-    projectId,
-    connectionId,
-    statusFieldId
-) => {
+window.githubProjectStatusChanged = (e, projectId) => {
     const optionId = e.currentTarget.value;
     const elIssue = e.currentTarget.closest('.issue');
     const elShouldBeDisabled = [
@@ -51,9 +46,11 @@ window.githubProjectStatusChanged = (
         {
             action: 'update-github-project-status',
             projectId,
-            statusFieldId,
+            statusFieldId: e.currentTarget.getAttribute('status-field-id'),
             optionId,
-            connectionId,
+            connectionId: elIssue
+                .querySelector('.github-projects')
+                .getAttribute('connection-id'),
         },
         () => {
             elShouldBeDisabled.forEach((item) => {
@@ -81,7 +78,8 @@ window.renderGithubProjectStatusDropDown = (
               })
               .join('')
         : '';
-    const githubProjectStatusDropdownList = `<select class="form-control ml-4 github-project-status" ><option>無</option>${githubProjectStatusOptions}</select>`;
+    console.log(currentGithubProject);
+    const githubProjectStatusDropdownList = `<select status-field-id="${currentGithubProject?.statusFieldId}" class="form-control ml-4 github-project-status" ><option>無</option>${githubProjectStatusOptions}</select>`;
     const existsElement = elIssue.querySelector('.github-project-status');
     if (existsElement) {
         existsElement.outerHTML = githubProjectStatusDropdownList;
@@ -92,12 +90,7 @@ window.renderGithubProjectStatusDropDown = (
     }
     const elProjectStatus = elIssue.querySelector('.github-project-status');
     elProjectStatus.addEventListener('change', (e) => {
-        window.githubProjectStatusChanged(
-            e,
-            githubProjectId,
-            extraData.githubConnectionId,
-            extraData.githubStatusFieldId
-        );
+        window.githubProjectStatusChanged(e, githubProjectId);
     });
     return elProjectStatus;
 };
@@ -145,7 +138,7 @@ window.injectHTMLToIssueElement = async (
             }</option>`;
         })
         .join('');
-    const githubProjectDropdownList = `<select class="form-control ml-4 github-projects"><option>無</option>${githubProjectOptions}</select>`;
+    const githubProjectDropdownList = `<select connection-id="${extraData.githubConnectionId}" class="form-control ml-4 github-projects"><option>無</option>${githubProjectOptions}</select>`;
 
     if (elIssue.querySelectorAll('.buttons').length === 0) {
         const elButtons = document.createElement('div');
@@ -238,9 +231,21 @@ window.injectHTMLToIssueElement = async (
                         originalProjectId: extraData.githubProjectId,
                         originalConnectionId: extraData.githubConnectionId,
                     },
-                    () => {
+                    (resp) => {
                         elProjectStatus.removeAttribute('disabled');
                         elProjectDdl.removeAttribute('disabled');
+                        elProjectDdl.setAttribute(
+                            'connection-id',
+                            resp.connectionId
+                        );
+                        const currentGithubProject = githubProjects.find(
+                            (item) => item.githubProjectId === githubProjectId
+                        );
+                        elProjectStatus.value = '無';
+                        elProjectStatus.setAttribute(
+                            'status-field-id',
+                            currentGithubProject.statusFieldId
+                        );
                     }
                 );
             });

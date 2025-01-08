@@ -69,7 +69,6 @@ namespace Homo.Bet.Api
                 var httpContent = new StringContent(@$"{{""query"":""{{ organization(login: \""homo-tw\"") {{ repository(name: \""itemhub\"") {{ issues(first: 40, states: OPEN, orderBy: {{field: CREATED_AT, direction: DESC}}) {{ nodes {{ number, id, title, closed, projectItems(first: 20) {{ edges {{ node {{id}} }},nodes {{ fieldValueByName(name: \""Status\"") {{ ... on ProjectV2ItemFieldSingleSelectValue {{name, optionId}} }} }} }}, projectsV2(first:20) {{ nodes{{ id, title, field(name: \""Status\"") {{ ... on ProjectV2SingleSelectField {{ name, id }} }} }} }} }} }} }} }} }}""}}", System.Text.Encoding.UTF8, "application/json");
                 HttpResponseMessage response = await githubClient.PostAsync(url, httpContent);
                 string jsonResponse = await response.Content.ReadAsStringAsync();
-                System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(jsonResponse, Newtonsoft.Json.Formatting.Indented)}");
                 JObject graphqlResponse = JObject.Parse(jsonResponse);
 
                 githubIssues = graphqlResponse["data"]["organization"]["repository"]["issues"]["nodes"].ToList<dynamic>().Where(item => (bool)item.closed != true).Select(item =>
@@ -178,7 +177,6 @@ namespace Homo.Bet.Api
                     var httpContent = new StringContent($@"{{""assignees"":[""{username}""]}}", System.Text.Encoding.UTF8, "application/json");
                     var url = $"https://api.github.com/repos/homo-tw/itemhub/issues/{task.ExternalId}/assignees";
                     var response = githubClient.PostAsync(url, httpContent);
-                    System.Console.WriteLine(response.GetAwaiter().GetResult().Content.ReadAsStringAsync().GetAwaiter().GetResult());
                 }
             }
 
@@ -210,7 +208,6 @@ namespace Homo.Bet.Api
                     var httpContent = new StringContent($@"{{""assignees"":[""{username}""]}}", System.Text.Encoding.UTF8, "application/json");
                     var url = $"https://api.github.com/repos/homo-tw/itemhub/issues/{task.ExternalId}/assignees";
                     var response = githubClient.PostAsync(url, httpContent);
-                    System.Console.WriteLine(response.GetAwaiter().GetResult().Content.ReadAsStringAsync().GetAwaiter().GetResult());
                 }
             }
             return new { status = Homo.Core.Constants.CUSTOM_RESPONSE.OK };

@@ -59,7 +59,6 @@ namespace Homo.Bet.Api
                     var issues = graphqlResponse["data"]["organization"]["repositories"]["edges"][0]["node"]["issues"]["edges"].ToList<dynamic>().Select(item =>
                     {
                         var assignees = ((JArray)item["node"]["assignees"]["nodes"]).ToList<dynamic>().Select(item => (string)item["login"]);
-                        System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(item, Newtonsoft.Json.Formatting.Indented)}");
                         return new
                         {
                             title = item["node"]["title"],
@@ -79,7 +78,6 @@ namespace Homo.Bet.Api
                     issues.ForEach(issue =>
                     {
                         var matchedTask = betTasks.Where(task => task.ExternalId == (string)issue.id).FirstOrDefault();
-                        System.Console.WriteLine($"{issue.id} {issue.assignee}: {issue.lastUpdate}");
                         if (matchedTask == null)
                         {
                             System.Console.WriteLine($"skip matched Task");
