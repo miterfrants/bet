@@ -1,11 +1,9 @@
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
-using Homo.Core.Constants;
 using Microsoft.Extensions.Options;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using System;
 using Newtonsoft.Json.Linq;
 using System.Linq;
 

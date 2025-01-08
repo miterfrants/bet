@@ -548,8 +548,5 @@ if (
             '[aria-label="Issues"] > div > div'
         );
         window.injectIssuesButton(elIssues);
-        // elIssues.forEach(async (elIssue) => {
-        //     window.injectIssueButton(elIssue);
-        // });
     })();
 }

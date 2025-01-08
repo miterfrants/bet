@@ -7,12 +7,12 @@ namespace Homo.Bet.Api
 {
     public class CoinsLogDataService
     {
-        public static int GetEarnCoins(BargainingChipDBContext dbContext, long userId)
+        public static int GetEarnCoins(BargainingChipDBContext dbContext, long? userId)
         {
             return dbContext.CoinLog
                 .Where(x =>
                     x.DeletedAt == null
-                    && x.OwnerId == userId
+                    && (userId == null || x.OwnerId == userId)
                     && (x.Type == COIN_LOG_TYPE.EARN || x.Type == COIN_LOG_TYPE.BUY || x.Type == COIN_LOG_TYPE.TRANSFER_TO)
                 )
                 .GroupBy(x => new { x.OwnerId, x.Type })
@@ -143,6 +143,19 @@ namespace Homo.Bet.Api
                     && x.OwnerId == ownerId
                     && x.Type == type
                     && x.IsLock == IsLock
+                )
+                .ToList();
+        }
+
+        public static List<CoinLog> GetAllEarnCoinsThisWeek(BargainingChipDBContext dbContext
+            )
+        {
+            return dbContext.CoinLog
+                .Where(x =>
+                    x.DeletedAt == null
+                    && x.Type == COIN_LOG_TYPE.EARN
+                    && x.CreatedAt >= DateTime.Now.AddDays(-7)
+                    && x.CreatedAt <= DateTime.Now
                 )
                 .ToList();
         }
