@@ -19,13 +19,13 @@ namespace Homo.Bet.Api
         }
 
         [HttpPost]
-        public async Task<dynamic> Webhook([FromBody] GithubIssueWebhook body, Homo.Bet.Api.DTOs.JwtExtraPayload extraPayload)
+        public async Task<dynamic> Webhook([FromBody] GithubIssueWebhook body)
         {
             if (body.Action != "opened")
             {
                 return new { };
             }
-            var newTasks = TaskDataservice.BatchCreate(_dbContext, 6, extraPayload.Id, new List<DTOs.Task>{new DTOs.Task(){
+            var newTasks = TaskDataservice.BatchCreate(_dbContext, 6, 5, new List<DTOs.Task>{new DTOs.Task(){
                 Name = "",
                 Type = TASK_TYPE.GITHUB,
                 ExternalId = body.Issue.Number
