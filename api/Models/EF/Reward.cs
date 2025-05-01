@@ -13,5 +13,6 @@ namespace Homo.Bet.Api
         public DateTime? DeletedAt { get; set; }
         public REWARD_TYPE Type { get; set; }
         public int Qty { get; set; }
+        public DateTime? LeaveDate { get; set; }
     }
 }

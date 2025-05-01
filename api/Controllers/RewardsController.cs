@@ -30,5 +30,24 @@ namespace Homo.Bet.Api
             return new { coinsPerWeek = RewardDataService.GetRewardCoinPerWeek(_dbContext, extraPayload.Id) };
         }
 
+
+        [HttpGet]
+        [Route("this-month-sick-leave-days")]
+        public dynamic getSickLeaveDays(DTOs.JwtExtraPayload extraPayload)
+        {
+
+            return new { days = RewardDataService.GetSickLeaves(_dbContext, extraPayload.Id, System.DateTime.Now) };
+        }
+
+
+
+        [HttpGet]
+        [Route("this-month-menstruation-leave-days")]
+        public dynamic getMenstruationLeaveDays(DTOs.JwtExtraPayload extraPayload)
+        {
+
+            return new { days = RewardDataService.GetMenstruationLeaves(_dbContext, extraPayload.Id, System.DateTime.Now) };
+        }
+
     }
 }

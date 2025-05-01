@@ -1,4 +1,4 @@
-const apiEndPoint = 'https://bet.homo.tw/api/v1';
+const apiEndPoint = 'https://localhost:5001/api/v1';
 const API = {
     ENDPOINT: apiEndPoint,
     AUTH: apiEndPoint + '/auth/auth-from-chrome-ext',
@@ -20,8 +20,9 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 });
 
 chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
-    if (req.action === 'get-tasks-and-renew') {
+    if (req.action === 'get-tasks') {
         chrome.storage.sync.get(['token']).then((storage) => {
+            console.log('get-tasks');
             getTasks(storage.token, req.externalIds).then((issues) => {
                 sendResponse(issues);
             });
@@ -83,8 +84,15 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
             done(storage.token, req.externalId, sendResponse);
         });
     } else if (req.action === 'buy') {
+        console.log(req);
         chrome.storage.sync.get(['token']).then((storage) => {
-            buy(storage.token, req.name, req.value, sendResponse);
+            buy(
+                storage.token,
+                req.name,
+                req.value,
+                req.leaveDate,
+                sendResponse
+            );
         });
     } else if (req.action === 'transfer') {
         chrome.storage.sync.get(['token']).then((storage) => {
@@ -124,7 +132,7 @@ async function transfer(token, receiverId, qty, callback) {
     callback(respOfBuy);
 }
 
-async function buy(token, name, value, callback) {
+async function buy(token, name, value, leaveDate, callback) {
     const resp = await fetch(`${API.ENDPOINT}/goods/buy`, {
         method: 'POST',
         headers: {
@@ -134,6 +142,7 @@ async function buy(token, name, value, callback) {
         body: JSON.stringify({
             name,
             value,
+            leaveDate,
         }),
     });
     const respOfBuy = await resp.json();

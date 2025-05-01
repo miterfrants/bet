@@ -10,6 +10,8 @@ namespace Homo.Bet.Api
         [Description("Buy")]
         BUY,
         [Description("Transfer To")]
-        TRANSFER_TO
+        TRANSFER_TO,
+        [Description("工時不足懲罰")]
+        PUNISHMENT_FOR_INSUFFICIENT_WORKING_HOURS
     }
 }

@@ -49,7 +49,7 @@ namespace Homo.Bet.Api
                             Name = item["title"],
                             Id = item["id"],
                             Status = status,
-			    StatusFieldId = statusFieldId
+                            StatusFieldId = statusFieldId
                         };
                     }).ToList(); ;
                 result.AddRange(projects);
@@ -77,10 +77,11 @@ namespace Homo.Bet.Api
                 response = await githubClient.PostAsync(url, httpContent);
 
                 var responseBody = await response.Content.ReadAsStringAsync();
-		System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(responseBody, Newtonsoft.Json.Formatting.Indented)}");
+                System.Console.WriteLine(@$"testing 123123: {{""query"":""mutation {{ addProjectV2ItemById (input: {{ projectId: \""{dto.ProjectId}\"" contentId: \""{dto.IssueId}\""}}) {{item {{ id }} }}}}""}}");
+                System.Console.WriteLine($"testing AAA:{Newtonsoft.Json.JsonConvert.SerializeObject(responseBody, Newtonsoft.Json.Formatting.Indented)}");
                 result = JObject.Parse(responseBody);
-  	    }
-            return new {ConnectionId = result["data"]["addProjectV2ItemById"]["item"]["id"].ToString()};
+            }
+            return new { ConnectionId = result["data"]["addProjectV2ItemById"]["item"]["id"].ToString() };
         }
 
         [HttpPost]

@@ -60,14 +60,16 @@ namespace Homo.Bet.Api
             }
             try
             {
+                var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
                 JwtSecurityToken jwtToken = (JwtSecurityToken)tokenHandler.ReadToken(token);
                 byte[] byteArrayOfKey = Encoding.UTF8.GetBytes(key);
                 TokenValidationParameters parameters = new TokenValidationParameters()
                 {
                     RequireExpirationTime = true,
                     IssuerSigningKey = new SymmetricSecurityKey(byteArrayOfKey),
-                    ValidateAudience = false,
                     ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateIssuerSigningKey = true
                 };
                 SecurityToken securityToken;
                 ClaimsPrincipal payload = tokenHandler.ValidateToken(token,
@@ -115,6 +117,7 @@ namespace Homo.Bet.Api
                 string authorization = Request.Headers["Authorization"];
                 token = authorization.Substring("Bearer ".Length).Trim();
             }
+
             DTOs.JwtExtraPayload extraPayload = JWTHelper.GetExtraPayload(key, token);
             if (extraPayload == null)
             {

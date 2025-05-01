@@ -78,7 +78,6 @@ window.renderGithubProjectStatusDropDown = (
               })
               .join('')
         : '';
-    console.log(currentGithubProject);
     const githubProjectStatusDropdownList = `<select status-field-id="${currentGithubProject?.statusFieldId}" class="form-control ml-4 github-project-status" ><option>無</option>${githubProjectStatusOptions}</select>`;
     const existsElement = elIssue.querySelector('.github-project-status');
     if (existsElement) {
@@ -100,10 +99,13 @@ window.injectHTMLToIssueElement = async (
     extraData,
     githubProjects
 ) => {
-    const elInjectContainer = elIssue.querySelector('div>div:nth-child(3)');
+    const elInjectContainer = elIssue.querySelector(
+        '[class^=MainContent-module__inner]'
+    );
     const storage = await chrome.storage.sync.get(['userInfo']);
-
-    const elTitle = elIssue.querySelector('.markdown-title');
+    const elTitle = elIssue.querySelector(
+        '[data-testid="issue-pr-title-link"]'
+    );
     const qty =
         extraData.ownerLockedBet +
         extraData.ownerFreeBet +
@@ -127,7 +129,7 @@ window.injectHTMLToIssueElement = async (
         title = elTitle.dataset.title;
     }
 
-    elTitle.innerHTML = `${title} ${window.coinIconHtml} <span class="subtotal">${qty}</span>`;
+    elTitle.innerHTML = `${title} <div style="display: flex;">${window.coinIconHtml} <span style="padding-left: 10px;" class="subtotal">${qty}</span></div>`;
     elIssue.classList.add('issue');
     // generate github projects dropdown
     const githubProjectOptions = githubProjects
@@ -509,20 +511,25 @@ window.injectHTMLToIssueElement = async (
 window.injectIssuesButton = async (elIssues) => {
     const externalIds = [];
     elIssues.forEach((elIssue) => {
-        const elLink = elIssue.querySelector('div>a');
-        const externalId = elLink.id.split('_')[1];
+        const elLink = elIssue.querySelector('div>h3 a');
+        if (!elLink) {
+            return;
+        }
+        const externalId = elLink
+            .getAttribute('href')
+            .replace('/homo-tw/itemhub/issues/', '');
         elIssue.dataset.id = externalId;
         externalIds.push(externalId);
     });
     chrome.runtime.sendMessage(
-        { action: 'get-tasks-and-renew', externalIds },
+        { action: 'get-tasks', externalIds },
         (issues) => {
             chrome.runtime.sendMessage(
                 { action: 'get-github-projects' },
                 (githubProjects) => {
                     issues.forEach((issue) => {
                         const elIssue = document.querySelector(
-                            `[id="issue_${issue.externalId}"]`
+                            `[data-id="${issue.externalId}"]`
                         );
                         window.injectHTMLToIssueElement(
                             elIssue,
@@ -549,12 +556,7 @@ if (
             'betCoins',
         ]);
         window.injectHead(storage.betCoins);
-        const elIssues = document.querySelectorAll(
-            '[aria-label="Issues"] > div > div'
-        );
+        const elIssues = document.querySelectorAll('[role="listitem"]');
         window.injectIssuesButton(elIssues);
-        // elIssues.forEach(async (elIssue) => {
-        //     window.injectIssueButton(elIssue);
-        // });
     })();
 }

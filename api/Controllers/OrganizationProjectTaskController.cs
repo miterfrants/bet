@@ -52,12 +52,10 @@ namespace Homo.Bet.Api
             var tasks = TaskDataservice.GetListByExternalIds(_dbContext, projectId, extIds);
             var taskExtIds = tasks.Select(task => task.ExternalId);
 
-            // should be delete 
-            var shouldBeDeletedIds = tasks.Where(task => !extIds.Contains(task.ExternalId)).Select(item => item.Id).ToList();
-            TaskDataservice.BatchDelete(_dbContext, extraPayload.Id, shouldBeDeletedIds);
-
             var allTask = new List<Task>();
             allTask.AddRange(tasks);
+
+            System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(allTask, Newtonsoft.Json.Formatting.Indented)}");
 
             var githubIssues = new List<GithubIssueIdentify>();
             // get github issue project and status and relation of project and issues;

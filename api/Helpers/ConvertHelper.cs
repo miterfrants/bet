@@ -33,6 +33,19 @@ namespace Homo.Bet.Api
             return list;
         }
 
+        public static long GetUserIdFromEmail(string username)
+        {
+            if (username == "miterfrants@gmail.com")
+            {
+                return 4;
+            }
+            else if (username == "vickychou99@gmail.com" || username == "Vickychou99")
+            {
+                return 5;
+            }
+            return 0;
+        }
+
         public class EnumList
         {
             public string Key { get; set; }

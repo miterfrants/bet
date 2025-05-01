@@ -20,15 +20,9 @@ namespace Homo.Bet.Api
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             string token = null;
-            if (authByCookie)
-            {
-                context.HttpContext.Request.Cookies.TryGetValue("token", out token);
-            }
-            else
-            {
-                string authorization = context.HttpContext.Request.Headers["Authorization"];
-                token = authorization == null ? "" : authorization.Substring("Bearer ".Length).Trim();
-            }
+
+            string authorization = context.HttpContext.Request.Headers["Authorization"];
+            token = authorization == null ? "" : authorization.Substring("Bearer ".Length).Trim();
 
             if (token == null || token == "")
             {
@@ -43,7 +37,6 @@ namespace Homo.Bet.Api
             {
                 throw new CustomException(ERROR_CODE.UNAUTH_ACCESS_API, HttpStatusCode.Unauthorized);
             }
-
             long? userId = JWTHelper.GetUserIdFromRequest(_jwtKey, context.HttpContext.Request);
 
             if (userId == null && isSignUp == false)
