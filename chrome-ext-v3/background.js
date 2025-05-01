@@ -90,7 +90,7 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
                 storage.token,
                 req.name,
                 req.value,
-                req.leaveDate,
+                req.leaveDate || undefined,
                 sendResponse
             );
         });
