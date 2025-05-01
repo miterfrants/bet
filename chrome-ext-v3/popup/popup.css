@@ -3,3 +3,6 @@ body { padding: 10px 20px; }
 .auth .profile img { object-fit: cover; width: 100%; height: 100%; }
 .auth .name { padding: 10px; }
 .auth .coin {width: 15px; height: 15px;}
+.hidden {display: none;}
+.w-full {width: calc(100% - 20px); }
+.mb-30 {margin-bottom: 30px;}

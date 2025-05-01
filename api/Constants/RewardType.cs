@@ -7,5 +7,12 @@ namespace Homo.Bet.Api
         STOCK,
         [Description("CoinPerWeek")]
         COIN_PER_WEEK,
+        [Description("病假")]
+        SICK_LEAVE,
+        [Description("事假")]
+        LEAVE,
+        [Description("生理假")]
+        MENSTRUATION_LEAVE,
+
     }
 }

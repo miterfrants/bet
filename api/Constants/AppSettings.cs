@@ -23,6 +23,8 @@ namespace Homo.Bet.Api
         public string LineToken { get; set; }
         public string LineGroupId { get; set; }
         public string DiscordWebhook { get; set; }
+        public string ToggleUsername { get; set; }
+        public string TogglePassword { get; set; }
     }
 
     public class Common : Homo.Api.ICommon

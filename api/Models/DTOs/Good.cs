@@ -9,6 +9,7 @@ namespace Homo.Bet.Api
         {
             public string Name { get; set; }
             public int Value { get; set; }
+            public DateTime? LeaveDate { get; set; }
         }
     }
 }

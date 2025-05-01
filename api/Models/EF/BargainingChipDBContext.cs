@@ -115,6 +115,7 @@ namespace Homo.Bet.Api
             {
                 entity.HasIndex(p => new { p.DeletedAt });
                 entity.HasIndex(p => new { p.Type });
+                entity.HasIndex(p => new { p.LeaveDate });
             });
         }
 

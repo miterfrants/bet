@@ -88,6 +88,12 @@ namespace Homo.Bet.Api
                 c.TimeZoneInfo = TimeZoneInfo.Local;
                 c.CronExpression = @"0 9 * * 3";
             });
+
+            services.AddCronJob<WorkingTimeCheckCronJob>(c =>
+            {
+                c.TimeZoneInfo = TimeZoneInfo.Local;
+                c.CronExpression = @"30 20 * * *";
+            });
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo() { Title = "Api Doc", Version = "v1" });

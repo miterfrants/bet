@@ -13,7 +13,7 @@ namespace Homo.Bet.Api
                 .Where(x =>
                     x.DeletedAt == null
                     && (userId == null || x.OwnerId == userId)
-                    && (x.Type == COIN_LOG_TYPE.EARN || x.Type == COIN_LOG_TYPE.BUY || x.Type == COIN_LOG_TYPE.TRANSFER_TO)
+                    && (x.Type == COIN_LOG_TYPE.EARN || x.Type == COIN_LOG_TYPE.BUY || x.Type == COIN_LOG_TYPE.TRANSFER_TO || x.Type == COIN_LOG_TYPE.PUNISHMENT_FOR_INSUFFICIENT_WORKING_HOURS)
                 )
                 .GroupBy(x => new { x.OwnerId, x.Type })
                 .Select(g => new
