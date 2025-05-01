@@ -114,7 +114,7 @@ namespace Homo.Bet.Api
                         {
                             CoinsLogDataService.Create(dbContext, user.BetUserId, null, 0, COIN_LOG_TYPE.EARN, new DTOs.CoinLog
                             {
-                                Qty = 120
+                                Qty = 250
                             });
                         }
                     }

@@ -1,4 +1,4 @@
-const apiEndPoint = 'https://localhost:5001/api/v1';
+const apiEndPoint = 'https://bet.homo.tw/api/v1';
 const API = {
     ENDPOINT: apiEndPoint,
     AUTH: apiEndPoint + '/auth/auth-from-chrome-ext',
