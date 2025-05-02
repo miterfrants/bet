@@ -84,7 +84,6 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
             done(storage.token, req.externalId, sendResponse);
         });
     } else if (req.action === 'buy') {
-        console.log(req);
         chrome.storage.sync.get(['token']).then((storage) => {
             buy(
                 storage.token,
