@@ -103,7 +103,7 @@ namespace Homo.Bet.Api
                         }
                     }
 
-                    if (checkDate > endOfMonth.AddDays(-7))
+                    if (checkDate.ToString("yyyy-MM-dd") == endOfMonth.AddDays(-7).ToString("yyyy-MM-dd"))
                     {
 
                         httpContent = new StringContent(@$"{{""start_date"":""{startOfMonth.ToString("yyyy-MM-dd")}"", ""end_date"": ""{endOfMonth.AddDays(1).ToString("yyyy-MM-dd")}"", ""user_ids"": [{user.ToggleUserId}]}}", System.Text.Encoding.UTF8, "application/json");
