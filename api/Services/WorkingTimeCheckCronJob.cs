@@ -86,14 +86,12 @@ namespace Homo.Bet.Api
                     var shouldBeCheckData = timeRecords.seconds < 5 * 60 * 60;
                     if (shouldBeCheckData)
                     {
-
                         // 取得今天是否有請假資料
                         var leaves = RewardDataService.GetLeaves(dbContext, user.BetUserId, checkDate, new List<REWARD_TYPE> {
                             REWARD_TYPE.SICK_LEAVE,
                             REWARD_TYPE.LEAVE,
                             REWARD_TYPE.MENSTRUATION_LEAVE,
                         });
-
                         if (leaves == 0) // 沒有請假時間又超過五個小時進行懲罰
                         {
                             CoinsLogDataService.Create(dbContext, user.BetUserId, null, 0, COIN_LOG_TYPE.PUNISHMENT_FOR_INSUFFICIENT_WORKING_HOURS, new DTOs.CoinLog
@@ -102,7 +100,6 @@ namespace Homo.Bet.Api
                             });
                         }
                     }
-
                     if (checkDate.ToString("yyyy-MM-dd") == endOfMonth.AddDays(-7).ToString("yyyy-MM-dd"))
                     {
 
