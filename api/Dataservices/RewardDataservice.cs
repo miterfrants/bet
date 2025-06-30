@@ -52,8 +52,8 @@ namespace Homo.Bet.Api
         public static int GetLeaves(BargainingChipDBContext dbContext, long ownerId, DateTime LeaveDate, List<REWARD_TYPE> RewardTypes)
         {
             var now = LeaveDate;
-            var monthStart = new DateTime(now.Year, now.Month, 1);
-            var nextMonthStart = monthStart.AddMonths(1);
+            var monthStart = new DateTime(now.Year, now.Month, now.Day);
+            var nextMonthStart = monthStart.AddDays(1);
             return dbContext.Reward.Where(item =>
                 item.DeletedAt == null
                 && item.CreatedBy == ownerId

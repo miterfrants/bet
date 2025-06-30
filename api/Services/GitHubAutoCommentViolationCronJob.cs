@@ -87,11 +87,28 @@ namespace Homo.Bet.Api
                         {
                             DateTime lastUpdateDateTime;
 
-                            if (!DateTime.TryParse(issue.lastUpdate.ToString().Replace("Z", ""), out lastUpdateDateTime))
+                            if (!DateTime.TryParse(issue.lastUpdate.ToString(), out lastUpdateDateTime))
                             {
                                 return;
                             }
-                            if ((DateTime.Now - lastUpdateDateTime).TotalHours < ((int)lastUpdateDateTime.DayOfWeek > 0 && (int)lastUpdateDateTime.DayOfWeek < 5 ? 24 : (int)lastUpdateDateTime.DayOfWeek == 5 ? 96 : (int)lastUpdateDateTime.DayOfWeek == 6 ? 72 : 48))
+                            
+                            // 轉換為本地時間進行比較
+                            DateTime now = DateTime.UtcNow;
+                            
+                            // 週六日跳過檢查
+                            if (now.DayOfWeek == DayOfWeek.Saturday || now.DayOfWeek == DayOfWeek.Sunday)
+                            {
+                                return;
+                            }
+                            
+                            // 計算需要的小時數
+                            double requiredHours = 24; // 預設 24 小時
+                            if (lastUpdateDateTime.DayOfWeek == DayOfWeek.Friday)
+                            {
+                                requiredHours = 96; // 週五延到下週二
+                            }
+                            
+                            if ((now - lastUpdateDateTime).TotalHours < requiredHours)
                             {
                                 return;
                             }
