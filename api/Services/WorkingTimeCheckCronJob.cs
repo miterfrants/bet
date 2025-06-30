@@ -83,6 +83,7 @@ namespace Homo.Bet.Api
                     // 讀取結果
                     var result = await response.Content.ReadAsStringAsync();
                     var timeRecords = JsonConvert.DeserializeObject<TimeRecord>(result);
+                    System.Console.WriteLine($"{user.BetUserId}:{user.ToggleUserId}:{Newtonsoft.Json.JsonConvert.SerializeObject(timeRecords, Newtonsoft.Json.Formatting.Indented)}");
                     var shouldBeCheckData = timeRecords.seconds < 5 * 60 * 60;
                     if (shouldBeCheckData)
                     {
@@ -106,6 +107,7 @@ namespace Homo.Bet.Api
                         httpContent = new StringContent(@$"{{""start_date"":""{startOfMonth.ToString("yyyy-MM-dd")}"", ""end_date"": ""{endOfMonth.AddDays(1).ToString("yyyy-MM-dd")}"", ""user_ids"": [{user.ToggleUserId}]}}", System.Text.Encoding.UTF8, "application/json");
                         response = await toggleClient.PostAsync(url, httpContent);
                         result = await response.Content.ReadAsStringAsync();
+                        System.Console.WriteLine("bbb");
                         timeRecords = JsonConvert.DeserializeObject<TimeRecord>(result);
                         if (timeRecords.seconds > 120 * 60 * 60)
                         {
