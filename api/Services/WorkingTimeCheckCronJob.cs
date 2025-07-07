@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Numerics;
 using Newtonsoft.Json;
+using isRock.LineBot.Extensions;
 
 
 namespace Homo.Bet.Api
@@ -83,8 +84,7 @@ namespace Homo.Bet.Api
                     // 讀取結果
                     var result = await response.Content.ReadAsStringAsync();
                     var timeRecords = JsonConvert.DeserializeObject<TimeRecord>(result);
-                    System.Console.WriteLine($"{user.BetUserId}:{user.ToggleUserId}:{Newtonsoft.Json.JsonConvert.SerializeObject(timeRecords, Newtonsoft.Json.Formatting.Indented)}");
-                    var shouldBeCheckData = timeRecords.seconds < 5 * 60 * 60;
+                    var shouldBeCheckData = timeRecords != null ? timeRecords.seconds < 5 * 60 * 60 : false;
                     if (shouldBeCheckData)
                     {
                         // 取得今天是否有請假資料
