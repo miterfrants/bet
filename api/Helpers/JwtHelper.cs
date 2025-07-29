@@ -4,28 +4,34 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace Homo.Bet.Api
 {
     public class JWTHelper
     {
-        public static string GenerateToken(string key, int expirationMinutes = 1, dynamic extraPayload = null, string[] roles = null)
+        public static string GenerateToken(string key, int expirationMinutes = 1, object extraPayload = null, string[] roles = null)
         {
-            var expirationTime = DateTime.Now.ToUniversalTime().AddMinutes(expirationMinutes);
+            var expirationTime = DateTime.UtcNow.AddMinutes(expirationMinutes);
             Int32 unixTimestamp = (Int32)(expirationTime.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
 
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
-            var signingCredentials = new SigningCredentials(
-                securityKey,
-                SecurityAlgorithms.HmacSha256);
+            var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             var header = new JwtHeader(signingCredentials);
 
-            var payload = new JwtPayload {
-                { "extra", extraPayload }
-                , { "exp", unixTimestamp }
-                , {"roles", roles}
+            var payload = new JwtPayload
+            {
+                { "exp", unixTimestamp },
+                { "roles", roles }
             };
+
+            if (extraPayload != null)
+            {
+                var json = JsonConvert.SerializeObject(extraPayload);
+                var dict = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
+                payload.Add("extra", dict);
+            }
 
             var secretToken = new JwtSecurityToken(header, payload);
             var handler = new JwtSecurityTokenHandler();
