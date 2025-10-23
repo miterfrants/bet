@@ -543,10 +543,86 @@ window.injectIssuesButton = async (elIssues) => {
     );
 };
 
+window.injectDoneButtonToIssuePage = async (issueId, extraData) => {
+    const storage = await chrome.storage.sync.get(['userInfo']);
+    const elSidebarAssigneesSection = document.querySelector(
+        '[data-testid="sidebar-assignees-section"]'
+    );
+
+    console.log(elSidebarAssigneesSection);
+
+    if (
+        !elSidebarAssigneesSection ||
+        elSidebarAssigneesSection.dataset.injected === 'true'
+    ) {
+        return;
+    }
+
+    const shouldShowDoneButton =
+        extraData.status < 3 &&
+        storage.userInfo.id !== extraData.assigneeId &&
+        extraData.status === 2;
+    console.log(extraData, shouldShowDoneButton);
+    if (shouldShowDoneButton) {
+        const doneButtonContainer = document.createElement('div');
+        doneButtonContainer.classList.add('done-button-container');
+        doneButtonContainer.style.marginBottom = '16px';
+        doneButtonContainer.style.borderBottom = '1px solid var(--borderColor-muted)';
+        doneButtonContainer.style.width = 'calc(100% - 20px)';
+        doneButtonContainer.style.marginLeft = '8px';
+        doneButtonContainer.style.marginRight = '12px';
+        doneButtonContainer.innerHTML = `
+            <style>
+                .homo-btn {
+                    background: none;
+                    border: 1px solid #cfd98c;
+                    height: 30px;
+                    border-radius: 10px;
+                    color: #cfd98c;
+                    display: inline-flex;
+                    align-items: center;
+                }
+            </style>
+            <h3 style="color: var(--fgColor-muted); font-size: var(--text-body-size-small); left: var(--base-size-8); pointer-events: none;">Homo Bet</h3>
+            <button class="btn-done homo-btn text-sm px-3" style="margin-top: 8px; margin-bottom: 8px;">
+                <div class="p-1" style="position: relative; height: 30px; width: 30px; object-fit: cover; transform: translate(0, -8px)">
+                    <img src="https://bet.homo.tw/assets/imgs/done.png" style="left: 0; width: 100%; height: 100%; position: absolute" />
+                </div>
+                <div class="ml-2">Done</div>
+            </button>
+        `;
+
+        doneButtonContainer
+            .querySelector('.btn-done')
+            .addEventListener('click', (e) => {
+                chrome.runtime.sendMessage(
+                    { action: 'done', externalId: extraData.id },
+                    (resp) => {
+                        if (resp.status && resp.status === 'OK') {
+                            doneButtonContainer.remove();
+                            return;
+                        }
+                        alert(resp.message);
+                    }
+                );
+            });
+
+        elSidebarAssigneesSection.insertBefore(
+            doneButtonContainer,
+            elSidebarAssigneesSection.firstElementChild
+        );
+    }
+
+    elSidebarAssigneesSection.dataset.injected = 'true';
+};
+
 window.variablePrefix = 'homo.bet.';
+
+// Issues 列表頁面
 if (
     location.origin === 'https://github.com' &&
-    location.pathname.startsWith('/homo-tw/itemhub/issues')
+    location.pathname.startsWith('/homo-tw/itemhub/issues') &&
+    !location.pathname.match(/\/homo-tw\/itemhub\/issues\/\d+/)
 ) {
     (async () => {
         const storage = await chrome.storage.sync.get([
@@ -558,5 +634,31 @@ if (
         window.injectHead(storage.betCoins);
         const elIssues = document.querySelectorAll('[role="listitem"]');
         window.injectIssuesButton(elIssues);
+    })();
+}
+
+// Issue 內頁
+if (
+    location.origin === 'https://github.com' &&
+    location.pathname.match(/\/homo-tw\/itemhub\/issues\/\d+/)
+) {
+    (async () => {
+        const storage = await chrome.storage.sync.get([
+            'token',
+            'userInfo',
+            'earnCoins',
+            'betCoins',
+        ]);
+        window.injectHead(storage.betCoins);
+
+        const issueId = location.pathname.split('/').pop();
+        chrome.runtime.sendMessage(
+            { action: 'get-tasks', externalIds: [issueId] },
+            (issues) => {
+                if (issues && issues.length > 0) {
+                    window.injectDoneButtonToIssuePage(issueId, issues[0]);
+                }
+            }
+        );
     })();
 }
