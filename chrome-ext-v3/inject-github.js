@@ -543,7 +543,7 @@ window.injectIssuesButton = async (elIssues) => {
     );
 };
 
-window.injectDoneButtonToIssuePage = async (issueId, extraData) => {
+window.injectButtonsToIssuePage = async (issueId, extraData) => {
     const storage = await chrome.storage.sync.get(['userInfo']);
     const elSidebarAssigneesSection = document.querySelector(
         '[data-testid="sidebar-assignees-section"]'
@@ -558,20 +558,23 @@ window.injectDoneButtonToIssuePage = async (issueId, extraData) => {
         return;
     }
 
-    const shouldShowDoneButton =
-        extraData.status < 3 &&
-        storage.userInfo.id !== extraData.assigneeId &&
-        extraData.status === 2;
-    console.log(extraData, shouldShowDoneButton);
-    if (shouldShowDoneButton) {
-        const doneButtonContainer = document.createElement('div');
-        doneButtonContainer.classList.add('done-button-container');
-        doneButtonContainer.style.marginBottom = '16px';
-        doneButtonContainer.style.borderBottom = '1px solid var(--borderColor-muted)';
-        doneButtonContainer.style.width = 'calc(100% - 20px)';
-        doneButtonContainer.style.marginLeft = '8px';
-        doneButtonContainer.style.marginRight = '12px';
-        doneButtonContainer.innerHTML = `
+    const isAssignee = storage.userInfo.id === extraData.assigneeId;
+    const beMarkedFinish = extraData.status === 2;
+    const shouldShowMarkFinishButton = extraData.status < 3 && isAssignee && !beMarkedFinish;
+    const shouldShowDoneButton = extraData.status < 3 && !isAssignee && beMarkedFinish;
+    
+    console.log(extraData, { shouldShowMarkFinishButton, shouldShowDoneButton });
+    
+    if (shouldShowMarkFinishButton || shouldShowDoneButton) {
+        const buttonContainer = document.createElement('div');
+        buttonContainer.classList.add('homo-button-container');
+        buttonContainer.style.marginBottom = '16px';
+        buttonContainer.style.borderBottom = '1px solid var(--borderColor-muted)';
+        buttonContainer.style.width = 'calc(100% - 20px)';
+        buttonContainer.style.marginLeft = '8px';
+        buttonContainer.style.marginRight = '12px';
+        
+        let buttonsHtml = `
             <style>
                 .homo-btn {
                     background: none;
@@ -584,31 +587,68 @@ window.injectDoneButtonToIssuePage = async (issueId, extraData) => {
                 }
             </style>
             <h3 style="color: var(--fgColor-muted); font-size: var(--text-body-size-small); left: var(--base-size-8); pointer-events: none;">Homo Bet</h3>
-            <button class="btn-done homo-btn text-sm px-3" style="margin-top: 8px; margin-bottom: 8px;">
-                <div class="p-1" style="position: relative; height: 30px; width: 30px; object-fit: cover; transform: translate(0, -8px)">
-                    <img src="https://bet.homo.tw/assets/imgs/done.png" style="left: 0; width: 100%; height: 100%; position: absolute" />
-                </div>
-                <div class="ml-2">Done</div>
-            </button>
         `;
+        
+        if (shouldShowMarkFinishButton) {
+            buttonsHtml += `
+                <button class="btn-mark-finish homo-btn text-sm px-3" style="margin-top: 8px; margin-bottom: 8px;">
+                    <div class="p-1" style="position: relative; height: 40px; width: 40px; object-fit: cover; transform: translate(0, -8px)">
+                        <img src="https://bet.homo.tw/assets/imgs/verify.png" style="left: 0; width: 100%; height: 100%; position: absolute" />
+                    </div>
+                    <div class="ml-2">Mark Finish</div>
+                </button>
+            `;
+        }
+        
+        if (shouldShowDoneButton) {
+            buttonsHtml += `
+                <button class="btn-done homo-btn text-sm px-3" style="margin-top: 8px; margin-bottom: 8px;">
+                    <div class="p-1" style="position: relative; height: 30px; width: 30px; object-fit: cover; transform: translate(0, -8px)">
+                        <img src="https://bet.homo.tw/assets/imgs/done.png" style="left: 0; width: 100%; height: 100%; position: absolute" />
+                    </div>
+                    <div class="ml-2">Done</div>
+                </button>
+            `;
+        }
+        
+        buttonContainer.innerHTML = buttonsHtml;
 
-        doneButtonContainer
-            .querySelector('.btn-done')
-            .addEventListener('click', (e) => {
-                chrome.runtime.sendMessage(
-                    { action: 'done', externalId: extraData.id },
-                    (resp) => {
-                        if (resp.status && resp.status === 'OK') {
-                            doneButtonContainer.remove();
-                            return;
+        if (shouldShowMarkFinishButton) {
+            buttonContainer
+                .querySelector('.btn-mark-finish')
+                .addEventListener('click', (e) => {
+                    chrome.runtime.sendMessage(
+                        { action: 'mark-finish', externalId: extraData.id },
+                        (resp) => {
+                            if (resp.status && resp.status === 'OK') {
+                                buttonContainer.remove();
+                                return;
+                            }
+                            alert(resp.message);
                         }
-                        alert(resp.message);
-                    }
-                );
-            });
+                    );
+                });
+        }
+
+        if (shouldShowDoneButton) {
+            buttonContainer
+                .querySelector('.btn-done')
+                .addEventListener('click', (e) => {
+                    chrome.runtime.sendMessage(
+                        { action: 'done', externalId: extraData.id },
+                        (resp) => {
+                            if (resp.status && resp.status === 'OK') {
+                                buttonContainer.remove();
+                                return;
+                            }
+                            alert(resp.message);
+                        }
+                    );
+                });
+        }
 
         elSidebarAssigneesSection.insertBefore(
-            doneButtonContainer,
+            buttonContainer,
             elSidebarAssigneesSection.firstElementChild
         );
     }
@@ -656,7 +696,7 @@ if (
             { action: 'get-tasks', externalIds: [issueId] },
             (issues) => {
                 if (issues && issues.length > 0) {
-                    window.injectDoneButtonToIssuePage(issueId, issues[0]);
+                    window.injectButtonsToIssuePage(issueId, issues[0]);
                 }
             }
         );
