@@ -1,6 +1,31 @@
 window.coinIconHtml =
     '<div class="overflow-hidden" style="width:20px; height: 20px; margin-left: 10px; margin-right: 10px"><img style="width: 100%; height: 100%; object-fit: contain;" src="https://bet.homo.tw/assets/imgs/coin.png" /> </div> X ';
 
+// 檢查 issue 是否建立超過 7 天
+window.isIssueOlderThanSevenDays = (elIssue) => {
+    const relativeTimeElement = elIssue.querySelector('relative-time');
+    if (!relativeTimeElement) {
+        return false;
+    }
+    
+    const datetimeStr = relativeTimeElement.getAttribute('datetime');
+    if (!datetimeStr) {
+        return false;
+    }
+    
+    // 解析 GMT+0 時間
+    const issueCreatedDate = new Date(datetimeStr);
+    
+    // 取得現在時間 (GMT+8)
+    const now = new Date();
+    
+    // 計算 7 天前的時間
+    const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+    
+    // 檢查 issue 建立時間是否早於 7 天前
+    return issueCreatedDate < sevenDaysAgo;
+};
+
 window.injectHead = (betCoins) => {
     const coinIconHtml =
         '<div class="overflow-hidden" style="width:20px; height: 20px; margin-left: 10px; margin-right: 10px"><img style="width: 100%; height: 100%; object-fit: contain;" src="https://bet.homo.tw/assets/imgs/coin.png" /> </div> X ';
@@ -273,7 +298,15 @@ window.injectHTMLToIssueElement = async (
                 .querySelector('.homo-bargaining-add')
                 .classList.remove('d-none');
         } else {
-            elIssue.querySelector('.btn-claim').classList.remove('d-none');
+            // 檢查 issue 是否建立超過 7 天
+            const isOlderThanSevenDays = window.isIssueOlderThanSevenDays(elIssue);
+            
+            if (isOlderThanSevenDays) {
+                elIssue.querySelector('.btn-claim').classList.remove('d-none');
+            } else {
+                elIssue.querySelector('.btn-claim').classList.add('d-none');
+            }
+            
             elIssue.querySelector('.assignee').classList.add('d-none');
             elIssue.querySelector('.assignee').innerHTML = '';
             elIssue
@@ -563,9 +596,13 @@ window.injectButtonsToIssuePage = async (issueId, extraData) => {
     const shouldShowMarkFinishButton = extraData.status < 3 && isAssignee && !beMarkedFinish;
     const shouldShowDoneButton = extraData.status < 3 && !isAssignee && beMarkedFinish;
     
-    console.log(extraData, { shouldShowMarkFinishButton, shouldShowDoneButton });
+    // 檢查是否應該顯示 Claim 按鈕（沒有 assignee 且超過 7 天）
+    const isOlderThanSevenDays = window.isIssueOlderThanSevenDays(document);
+    const shouldShowClaimButton = !extraData.assigneeId && isOlderThanSevenDays;
     
-    if (shouldShowMarkFinishButton || shouldShowDoneButton) {
+    console.log(extraData, { shouldShowMarkFinishButton, shouldShowDoneButton, shouldShowClaimButton });
+    
+    if (shouldShowMarkFinishButton || shouldShowDoneButton || shouldShowClaimButton) {
         const buttonContainer = document.createElement('div');
         buttonContainer.classList.add('homo-button-container');
         buttonContainer.style.marginBottom = '16px';
@@ -611,6 +648,17 @@ window.injectButtonsToIssuePage = async (issueId, extraData) => {
             `;
         }
         
+        if (shouldShowClaimButton) {
+            buttonsHtml += `
+                <button class="btn-claim homo-btn text-sm px-3" style="margin-top: 8px; margin-bottom: 8px;">
+                    <div class="p-1" style="position: relative; height: 40px; width: 40px; object-fit: cover; transform: translate(0, -8px)">
+                        <img src="https://bet.homo.tw/assets/imgs/hand-up.png" style="left: 0; width: 100%; height: 100%; position: absolute" />
+                    </div>
+                    <div class="ml-2">Claim</div>
+                </button>
+            `;
+        }
+        
         buttonContainer.innerHTML = buttonsHtml;
 
         if (shouldShowMarkFinishButton) {
@@ -636,6 +684,28 @@ window.injectButtonsToIssuePage = async (issueId, extraData) => {
                 .addEventListener('click', (e) => {
                     chrome.runtime.sendMessage(
                         { action: 'done', externalId: extraData.id },
+                        (resp) => {
+                            if (resp.status && resp.status === 'OK') {
+                                buttonContainer.remove();
+                                return;
+                            }
+                            alert(resp.message);
+                        }
+                    );
+                });
+        }
+
+        if (shouldShowClaimButton) {
+            buttonContainer
+                .querySelector('.btn-claim')
+                .addEventListener('click', (e) => {
+                    const days = prompt('預計完成的時間 days');
+                    if (isNaN(days)) {
+                        alert('為填入預計完成時間');
+                        return;
+                    }
+                    chrome.runtime.sendMessage(
+                        { action: 'claim', externalId: extraData.id, workDays: days },
                         (resp) => {
                             if (resp.status && resp.status === 'OK') {
                                 buttonContainer.remove();
