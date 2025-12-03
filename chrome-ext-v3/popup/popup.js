@@ -225,3 +225,215 @@ document
             }
         );
     });
+
+// ============ 卡片系統 ============
+
+// 卡片類型對應的 CSS class
+const CARD_TYPE_CLASS = {
+    'MAGIC': 'magic',
+    'TRAP': 'trap',
+    'BUFF': 'buff'
+};
+
+// 卡片類型的中文名稱
+const CARD_TYPE_NAME = {
+    'MAGIC': '魔法卡',
+    'TRAP': '陷阱卡',
+    'BUFF': '增益卡'
+};
+
+// 初始化卡片系統
+async function initCardSystem() {
+    const storage = await chrome.storage.sync.get(['token']);
+    if (!storage.token) return;
+
+    // 從 API 取得商店卡片並渲染
+    const respCards = await Data.GetCards(storage.token);
+    if (respCards.status === RESPONSE_STATUS.OK) {
+        renderCardStore(respCards.data.cards);
+    }
+
+    // 從 API 取得使用者卡片並渲染
+    renderUserCards();
+}
+
+// 渲染卡片購物區
+function renderCardStore(cards) {
+    const cardsListEl = document.querySelector('.cards-list');
+
+    if (!cards || cards.length === 0) {
+        cardsListEl.innerHTML = '<p style="color: #999; font-size: 12px;">目前沒有可購買的卡片</p>';
+        return;
+    }
+
+    cardsListEl.innerHTML = cards.map(card => `
+        <div class="card-item" data-card-id="${card.id}">
+            <div class="card-name">${card.name}</div>
+            <span class="card-type ${CARD_TYPE_CLASS[card.type]}">${CARD_TYPE_NAME[card.type]}</span>
+            <div class="card-description">${card.description}</div>
+            <div class="card-cost">
+                <div class="cost-amount">
+                    ${card.cost} X <img class="coin pad-l-5" src="/imgs/coin.png" />
+                </div>
+                <button data-card-id="${card.id}">購買</button>
+            </div>
+        </div>
+    `).join('');
+
+    // 綁定購買按鈕事件
+    document.querySelectorAll('.card-item button').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const cardId = Number(e.currentTarget.dataset.cardId);
+            buyCard(cardId);
+        });
+    });
+}
+
+// 購買卡片
+async function buyCard(cardId) {
+    const storage = await chrome.storage.sync.get(['token']);
+    if (!storage.token) {
+        alert('請先登入');
+        return;
+    }
+
+    // 調用 API 購買卡片
+    const resp = await Data.BuyCard(storage.token, cardId);
+
+    if (resp.status === RESPONSE_STATUS.OK) {
+        alert('購買成功！');
+        // 重新初始化以更新存款和卡片列表
+        init();
+        renderUserCards();
+    } else {
+        alert(resp.data.errorMsg || '購買失敗');
+    }
+}
+
+// 渲染使用者卡片側邊欄
+async function renderUserCards() {
+    const storage = await chrome.storage.sync.get(['token']);
+    if (!storage.token) return;
+
+    // 從 API 取得使用者所有卡片和已裝備的卡片
+    const respMyCards = await Data.GetMyCards(storage.token);
+    const respEquippedCards = await Data.GetEquippedCards(storage.token);
+
+    if (respMyCards.status !== RESPONSE_STATUS.OK || respEquippedCards.status !== RESPONSE_STATUS.OK) {
+        return;
+    }
+
+    const userCards = respMyCards.data.cards || [];
+    const equippedCards = respEquippedCards.data.cards || [];
+
+    // 渲染已裝備的卡片
+    const equippedCardsListEl = document.querySelector('.equipped-cards-list');
+    if (equippedCards.length === 0) {
+        equippedCardsListEl.innerHTML = '<p style="color: #999; font-size: 12px;">尚未裝備任何卡片</p>';
+    } else {
+        equippedCardsListEl.innerHTML = equippedCards.map(card => `
+            <div class="user-card-item equipped" data-user-card-id="${card.id}">
+                <div class="equipped-badge">已裝備</div>
+                <div class="card-name">${card.name}</div>
+                <span class="card-type ${CARD_TYPE_CLASS[card.type]}">${CARD_TYPE_NAME[card.type]}</span>
+                <div class="card-actions">
+                    <button class="unequip-btn" data-user-card-id="${card.id}">卸下</button>
+                </div>
+            </div>
+        `).join('');
+
+        // 綁定卸下按鈕事件
+        document.querySelectorAll('.unequip-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const userCardId = Number(e.currentTarget.dataset.userCardId);
+                unequipCard(userCardId);
+            });
+        });
+    }
+
+    // 渲染擁有的卡片
+    const ownedCardsListEl = document.querySelector('.owned-cards-list');
+    if (userCards.length === 0) {
+        ownedCardsListEl.innerHTML = '<p style="color: #999; font-size: 12px;">尚未擁有任何卡片</p>';
+    } else {
+        ownedCardsListEl.innerHTML = userCards.map(card => {
+            const isEquipped = card.isEquipped;
+            return `
+                <div class="user-card-item ${isEquipped ? 'equipped' : ''}" data-user-card-id="${card.id}">
+                    ${isEquipped ? '<div class="equipped-badge">已裝備</div>' : ''}
+                    <div class="card-name">${card.name}</div>
+                    <span class="card-type ${CARD_TYPE_CLASS[card.type]}">${CARD_TYPE_NAME[card.type]}</span>
+                    <div class="card-actions">
+                        <button class="equip-btn ${isEquipped ? '' : 'equip'}"
+                                data-user-card-id="${card.id}"
+                                ${isEquipped || equippedCards.length >= 3 ? 'disabled' : ''}>
+                            ${isEquipped ? '已裝備' : (equippedCards.length >= 3 ? '已滿' : '裝備')}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // 綁定裝備按鈕事件
+        document.querySelectorAll('.equip-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const userCardId = Number(e.currentTarget.dataset.userCardId);
+                equipCard(userCardId);
+            });
+        });
+    }
+}
+
+// 裝備卡片
+async function equipCard(userCardId) {
+    const storage = await chrome.storage.sync.get(['token']);
+    if (!storage.token) {
+        alert('請先登入');
+        return;
+    }
+
+    // 調用 API 裝備卡片
+    const resp = await Data.EquipCard(storage.token, userCardId);
+
+    if (resp.status === RESPONSE_STATUS.OK) {
+        // 重新渲染
+        renderUserCards();
+    } else {
+        alert(resp.data.errorMsg || '裝備失敗');
+    }
+}
+
+// 卸下卡片
+async function unequipCard(userCardId) {
+    const storage = await chrome.storage.sync.get(['token']);
+    if (!storage.token) {
+        alert('請先登入');
+        return;
+    }
+
+    // 調用 API 卸下卡片
+    const resp = await Data.UnequipCard(storage.token, userCardId);
+
+    if (resp.status === RESPONSE_STATUS.OK) {
+        // 重新渲染
+        renderUserCards();
+    } else {
+        alert(resp.data.errorMsg || '卸下失敗');
+    }
+}
+
+// Profile 點擊事件 - 顯示側邊欄
+document.querySelector('.profile.clickable').addEventListener('click', () => {
+    const mainViewport = document.querySelector('.main-viewport');
+    mainViewport.classList.add('show-sidebar');
+});
+
+// 關閉側邊欄
+document.querySelector('.close-sidebar').addEventListener('click', () => {
+    const mainViewport = document.querySelector('.main-viewport');
+    mainViewport.classList.remove('show-sidebar');
+});
+
+// 初始化卡片系統
+initCardSystem();

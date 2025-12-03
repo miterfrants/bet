@@ -1,8 +1,256 @@
-body { padding: 10px 20px; }
+body { padding: 0; }
 .auth .profile { width: 30px; height: 30px; overflow: hidden; border-radius: 50%; }
 .auth .profile img { object-fit: cover; width: 100%; height: 100%; }
 .auth .name { padding: 10px; }
 .auth .coin {width: 15px; height: 15px;}
+.header-bar { padding: 5px 10px; }
 .hidden {display: none;}
 .w-full {width: calc(100% - 20px); }
 .mb-30 {margin-bottom: 30px;}
+
+/* Profile 點擊樣式 */
+.profile.clickable {
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+.profile.clickable:hover {
+    opacity: 0.8;
+}
+
+/* 主視窗左滑效果 */
+.main-viewport {
+    width: calc(200%);
+    transition: transform 0.3s ease-in-out;
+    overflow: hidden;
+    transform: translateX(calc(-50%));
+}
+.main-viewport.show-sidebar {
+    transform: translateX(0px);
+}
+
+/* 關閉側邊欄按鈕 */
+.close-sidebar {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+.close-sidebar:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* 卡片購物區 */
+.card-store {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.cards-list {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 15px;
+    margin-top: 15px;
+}
+
+/* 卡片項目 */
+.card-item {
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 12px;
+    background: #fff;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+.card-item:hover {
+    border-color: #fac32d;
+    box-shadow: 0 2px 8px rgba(250, 195, 45, 0.2);
+    transform: translateY(-2px);
+}
+
+.card-item .card-name {
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: #333;
+}
+
+.card-item .card-type {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+.card-item .card-type.magic {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+.card-item .card-type.trap {
+    background: #fce4ec;
+    color: #c2185b;
+}
+.card-item .card-type.buff {
+    background: #e8f5e9;
+    color: #388e3c;
+}
+
+.card-item .card-description {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.4;
+    margin-bottom: 10px;
+}
+
+.card-item .card-cost {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.card-item .cost-amount {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.card-item button {
+    background-color: #fac32d;
+    border: none;
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+.card-item button:hover {
+    background-color: #e5ac11;
+}
+.card-item button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* 使用者卡片側邊欄 */
+.user-cards-sidebar {
+    overflow-y: auto;
+    max-height: 500px;
+    padding: 0 10px;
+    width: calc(50% - 20px);
+}
+
+/* 主要內容區 */
+.main-content {
+    padding: 0 10px;
+    box-sizing: border-box;
+}
+
+.equipped-cards, .owned-cards {
+    margin-bottom: 20px;
+}
+
+.equipped-cards h2, .owned-cards h2 {
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.equipped-cards-list, .owned-cards-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* 使用者擁有的卡片項目 */
+.user-card-item {
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 10px;
+    background: #fff;
+    transition: all 0.2s;
+    position: relative;
+}
+.user-card-item.equipped {
+    border-color: #fac32d;
+    background-color: #fffef7;
+}
+.user-card-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.user-card-item .card-name {
+    font-weight: bold;
+    font-size: 13px;
+    margin-bottom: 6px;
+    color: #333;
+}
+
+.user-card-item .card-type {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+
+.user-card-item .card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.user-card-item button {
+    flex: 1;
+    background-color: #f0f0f0;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    transition: background-color 0.2s;
+}
+.user-card-item button:hover {
+    background-color: #e0e0e0;
+}
+.user-card-item button.equip {
+    background-color: #fac32d;
+}
+.user-card-item button.equip:hover {
+    background-color: #e5ac11;
+}
+.user-card-item button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.equipped-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: #fac32d;
+    color: #333;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.cards-list { 
+    margin-bottom: 30px;
+}

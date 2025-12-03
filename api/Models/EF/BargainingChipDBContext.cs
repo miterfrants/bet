@@ -24,6 +24,8 @@ namespace Homo.Bet.Api
         public virtual DbSet<Task> Task { get; set; }
         public virtual DbSet<CoinLog> CoinLog { get; set; }
         public virtual DbSet<Reward> Reward { get; set; }
+        public virtual DbSet<Card> Card { get; set; }
+        public virtual DbSet<UserCard> UserCard { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

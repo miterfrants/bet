@@ -1,0 +1,163 @@
+using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace Homo.Bet.Api
+{
+    [Route("v1/cards")]
+    [AuthorizeFactory]
+    public class CardsController : ControllerBase
+    {
+        private readonly BargainingChipDBContext _dbContext;
+
+        public CardsController(BargainingChipDBContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
+
+        // GET /v1/cards - 取得所有可用的卡片（商店卡片）
+        [HttpGet]
+        public ActionResult<dynamic> GetAvailableCards()
+        {
+            var cards = CardDataservice.GetAvailableCards(_dbContext);
+            var cardsDto = cards.Select(card => new
+            {
+                id = card.Id,
+                name = card.Name,
+                type = card.Type.ToString(),
+                description = card.Description,
+                cost = card.Cost
+            }).ToList();
+
+            return new { cards = cardsDto };
+        }
+
+        // GET /v1/cards/my-cards - 取得使用者擁有的卡片
+        [HttpGet]
+        [Route("my-cards")]
+        public ActionResult<dynamic> GetMyCards(DTOs.JwtExtraPayload extraPayload)
+        {
+            var userCards = CardDataservice.GetUserCards(_dbContext, extraPayload.Id);
+            var userCardsDto = userCards.Select(userCard => new
+            {
+                id = userCard.Id,
+                cardId = userCard.CardId,
+                name = userCard.Card.Name,
+                type = userCard.Card.Type.ToString(),
+                description = userCard.Card.Description,
+                cost = userCard.Card.Cost,
+                isEquipped = userCard.IsEquipped,
+                purchaseDate = userCard.CreatedAt,
+                equippedAt = userCard.EquippedAt
+            }).ToList();
+
+            return new { cards = userCardsDto };
+        }
+
+        // GET /v1/cards/equipped - 取得已裝備的卡片
+        [HttpGet]
+        [Route("equipped")]
+        public ActionResult<dynamic> GetEquippedCards(DTOs.JwtExtraPayload extraPayload)
+        {
+            var equippedCards = CardDataservice.GetEquippedCards(_dbContext, extraPayload.Id);
+            var equippedCardsDto = equippedCards.Select(userCard => new
+            {
+                id = userCard.Id,
+                cardId = userCard.CardId,
+                name = userCard.Card.Name,
+                type = userCard.Card.Type.ToString(),
+                description = userCard.Card.Description,
+                equippedAt = userCard.EquippedAt
+            }).ToList();
+
+            return new { cards = equippedCardsDto };
+        }
+
+        // POST /v1/cards/buy - 購買卡片
+        [HttpPost]
+        [Route("buy")]
+        public ActionResult<dynamic> BuyCard([FromBody] DTOs.BuyCard dto, DTOs.JwtExtraPayload extraPayload)
+        {
+            // 檢查卡片是否存在
+            var card = CardDataservice.GetCardById(_dbContext, dto.CardId);
+            if (card == null)
+            {
+                return BadRequest(new { message = "卡片不存在" });
+            }
+
+            // 檢查使用者是否有足夠的 coins
+            var earnCoins = CoinsLogDataService.GetEarnCoins(_dbContext, extraPayload.Id);
+            if (earnCoins < card.Cost)
+            {
+                return BadRequest(new { message = "存款不足" });
+            }
+
+            // 扣除 coins（使用 BUY 類型，數量為負數）
+            var coinLogDto = new DTOs.CoinLog { Qty = -card.Cost };
+            CoinsLogDataService.Create(_dbContext, extraPayload.Id, null, extraPayload.Id, COIN_LOG_TYPE.BUY, coinLogDto);
+
+            // 購買卡片
+            var userCard = CardDataservice.BuyCard(_dbContext, extraPayload.Id, dto.CardId);
+
+            return new
+            {
+                message = "購買成功",
+                userCard = new
+                {
+                    id = userCard.Id,
+                    cardId = userCard.CardId,
+                    purchaseDate = userCard.CreatedAt
+                }
+            };
+        }
+
+        // POST /v1/cards/equip - 裝備卡片
+        [HttpPost]
+        [Route("equip")]
+        public ActionResult<dynamic> EquipCard([FromBody] DTOs.EquipCard dto, DTOs.JwtExtraPayload extraPayload)
+        {
+            var userCard = CardDataservice.EquipCard(_dbContext, extraPayload.Id, dto.UserCardId);
+
+            if (userCard == null)
+            {
+                return BadRequest(new { message = "裝備失敗，可能已達上限（最多3張）或卡片不存在" });
+            }
+
+            return new
+            {
+                message = "裝備成功",
+                userCard = new
+                {
+                    id = userCard.Id,
+                    cardId = userCard.CardId,
+                    isEquipped = userCard.IsEquipped,
+                    equippedAt = userCard.EquippedAt
+                }
+            };
+        }
+
+        // POST /v1/cards/unequip - 卸下卡片
+        [HttpPost]
+        [Route("unequip")]
+        public ActionResult<dynamic> UnequipCard([FromBody] DTOs.EquipCard dto, DTOs.JwtExtraPayload extraPayload)
+        {
+            var userCard = CardDataservice.UnequipCard(_dbContext, extraPayload.Id, dto.UserCardId);
+
+            if (userCard == null)
+            {
+                return BadRequest(new { message = "卸下失敗，卡片不存在" });
+            }
+
+            return new
+            {
+                message = "卸下成功",
+                userCard = new
+                {
+                    id = userCard.Id,
+                    cardId = userCard.CardId,
+                    isEquipped = userCard.IsEquipped
+                }
+            };
+        }
+    }
+}
