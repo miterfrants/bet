@@ -92,7 +92,7 @@ namespace Homo.Bet.Api
             services.AddCronJob<WorkingTimeCheckCronJob>(c =>
             {
                 c.TimeZoneInfo = TimeZoneInfo.Local;
-                c.CronExpression = @"* * * * *";
+                c.CronExpression = @"30 20 * * *";
             });
             services.AddSwaggerGen(c =>
             {
