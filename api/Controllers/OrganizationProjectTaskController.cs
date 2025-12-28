@@ -55,7 +55,6 @@ namespace Homo.Bet.Api
             var allTask = new List<Task>();
             allTask.AddRange(tasks);
 
-		System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(allTask, Newtonsoft.Json.Formatting.Indented)}");
             var githubIssues = new List<GithubIssueIdentify>();
             // get github issue project and status and relation of project and issues;
             using (HttpClient githubClient = new HttpClient())

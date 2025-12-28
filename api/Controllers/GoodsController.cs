@@ -33,7 +33,6 @@ namespace Homo.Bet.Api
             else if (dto.Name == "病假")
             {
                 var days = RewardDataService.GetSickLeaves(_dbContext, extraPayload.Id, dto.LeaveDate ?? System.DateTime.Now);
-                System.Console.WriteLine($"testing:{days}");
                 dto.Value = 1;
                 if (days < 2) // 一個月可以無償請兩次病假
                 {

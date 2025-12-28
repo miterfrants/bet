@@ -83,7 +83,17 @@ namespace Homo.Bet.Api
                     var response = await toggleClient.PostAsync(url, httpContent);
                     // 讀取結果
                     var result = await response.Content.ReadAsStringAsync();
-                    var timeRecords = JsonConvert.DeserializeObject<TimeRecord>(result);
+                    TimeRecord timeRecords = null;
+                    try
+                    {
+                        timeRecords = JsonConvert.DeserializeObject<TimeRecord>(result);
+                    }
+                    catch (System.Exception ex)
+                    {
+                        System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(result, Newtonsoft.Json.Formatting.Indented)}");
+                        throw ex;
+                    }
+
                     var shouldBeCheckData = timeRecords != null ? timeRecords.seconds < 5 * 60 * 60 : false;
                     if (shouldBeCheckData)
                     {
