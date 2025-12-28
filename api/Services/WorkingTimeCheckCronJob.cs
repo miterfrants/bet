@@ -42,10 +42,10 @@ namespace Homo.Bet.Api
         {
             // 星期一和星期日跳過檢查
             // GMT+0 的星期日和星期六跳過
-            if (DateTime.Today.DayOfWeek == DayOfWeek.Sunday || DateTime.Today.DayOfWeek == DayOfWeek.Saturday)
-            {
-                return;
-            }
+            // if (DateTime.Today.DayOfWeek == DayOfWeek.Sunday || DateTime.Today.DayOfWeek == DayOfWeek.Saturday)
+            // {
+            //     return;
+            // }
 
             _logger.LogInformation($"{DateTime.Now:hh:mm:ss} is working.");
 
