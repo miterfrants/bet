@@ -90,8 +90,7 @@ namespace Homo.Bet.Api
                     }
                     catch (System.Exception ex)
                     {
-                        System.Console.WriteLine($"testing:{Newtonsoft.Json.JsonConvert.SerializeObject(result, Newtonsoft.Json.Formatting.Indented)}");
-                        throw ex;
+                        System.Console.WriteLine($"error :{Newtonsoft.Json.JsonConvert.SerializeObject(result, Newtonsoft.Json.Formatting.Indented)}");
                     }
 
                     var shouldBeCheckData = timeRecords != null ? timeRecords.seconds < 5 * 60 * 60 : false;
