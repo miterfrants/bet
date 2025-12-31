@@ -69,17 +69,21 @@ namespace Homo.Bet.Api
         // 每週生成卡片（根據模板隨機抽 5 張）
         public static List<Card> GenerateWeeklyCards(BargainingChipDBContext dbContext)
         {
-            // 先清除所有現有的可用卡片（將未售出的卡片標記為不可用）
+            // 先清除所有現有的可用卡片（將未售出的卡片 soft delete）
             var existingCards = dbContext.Card
                 .Where(x => x.DeletedAt == null && x.IsAvailable == true)
                 .ToList();
 
             foreach (var card in existingCards)
             {
+                // Soft delete 未售出的卡片
+                card.DeletedAt = DateTime.Now;
                 card.IsAvailable = false;
             }
 
-            // 隨機抽取 5 個模板
+            dbContext.SaveChanges();
+
+            // 根據機率隨機抽取 5 個模板
             var templates = DrawRandomTemplates(dbContext, 5);
 
             // 根據模板生成卡片
