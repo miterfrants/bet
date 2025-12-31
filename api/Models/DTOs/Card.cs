@@ -33,6 +33,9 @@ namespace Homo.Bet.Api
         {
             [System.ComponentModel.DataAnnotations.Required]
             public long UserCardId { get; set; }
+
+            [System.ComponentModel.DataAnnotations.MaxLength(512)]
+            public string TriggerCondition { get; set; }
         }
     }
 }

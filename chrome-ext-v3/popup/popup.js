@@ -483,8 +483,44 @@ function showEquipConfirm(userCardId, cardName, cardType) {
     equipConfirm.querySelector('.equip-confirm-type').className = `equip-confirm-type ${CARD_TYPE_CLASS[cardType]}`;
     equipConfirm.querySelector('.equip-confirm-type').textContent = CARD_TYPE_NAME[cardType];
 
-    // 存儲卡片 ID 以供確認時使用
+    // 存儲卡片 ID 和類型
     equipConfirm.dataset.userCardId = userCardId;
+    equipConfirm.dataset.cardType = cardType;
+
+    // 檢查是否為陷阱卡
+    const isTrapCard = cardType === 'TRAP';
+    const today = new Date();
+    const isMonday = today.getDay() === 1;  // 0=週日, 1=週一, ..., 6=週六
+
+    // 顯示/隱藏觸發條件輸入框
+    const trapTriggerInput = equipConfirm.querySelector('.trap-trigger-input');
+    const trapMondayWarning = equipConfirm.querySelector('.trap-monday-warning');
+    const triggerTextarea = equipConfirm.querySelector('.trigger-condition-textarea');
+    const confirmButton = equipConfirm.querySelector('.btn-confirm-equip');
+
+    if (isTrapCard) {
+        trapTriggerInput.style.display = 'block';
+        triggerTextarea.value = '';  // 清空之前的輸入
+
+        // 檢查是否為週一
+        if (!isMonday) {
+            trapMondayWarning.style.display = 'block';
+            confirmButton.disabled = true;
+            confirmButton.style.opacity = '0.5';
+            confirmButton.style.cursor = 'not-allowed';
+        } else {
+            trapMondayWarning.style.display = 'none';
+            confirmButton.disabled = false;
+            confirmButton.style.opacity = '1';
+            confirmButton.style.cursor = 'pointer';
+        }
+    } else {
+        trapTriggerInput.style.display = 'none';
+        trapMondayWarning.style.display = 'none';
+        confirmButton.disabled = false;
+        confirmButton.style.opacity = '1';
+        confirmButton.style.cursor = 'pointer';
+    }
 
     // 顯示確認對話框（添加 confirm class 觸發滑動動畫）
     equipRunway.classList.add('confirm');
@@ -503,9 +539,23 @@ function initEquipConfirmEvents() {
     // 確認裝備按鈕
     equipConfirm.querySelector('.btn-confirm-equip').addEventListener('click', async (e) => {
         const userCardId = Number(equipConfirm.dataset.userCardId);
+        const cardType = equipConfirm.dataset.cardType;
+
+        // 如果是陷阱卡，讀取觸發條件
+        let triggerCondition = null;
+        if (cardType === 'TRAP') {
+            const triggerTextarea = equipConfirm.querySelector('.trigger-condition-textarea');
+            triggerCondition = triggerTextarea.value.trim();
+
+            // 驗證陷阱卡必須填寫觸發條件
+            if (!triggerCondition) {
+                alert('請填寫觸發條件！');
+                return;
+            }
+        }
 
         // 調用裝備函數
-        await equipCardConfirmed(userCardId);
+        await equipCardConfirmed(userCardId, triggerCondition);
 
         // 關閉確認對話框
         equipRunway.classList.remove('confirm');
@@ -513,7 +563,7 @@ function initEquipConfirmEvents() {
 }
 
 // 確認裝備卡片（API 調用）
-async function equipCardConfirmed(userCardId) {
+async function equipCardConfirmed(userCardId, triggerCondition = null) {
     const storage = await chrome.storage.sync.get(['token']);
     if (!storage.token) {
         alert('請先登入');
@@ -521,7 +571,7 @@ async function equipCardConfirmed(userCardId) {
     }
 
     // 調用 API 裝備卡片
-    const resp = await Data.EquipCard(storage.token, userCardId);
+    const resp = await Data.EquipCard(storage.token, userCardId, triggerCondition);
 
     if (resp.status === RESPONSE_STATUS.OK) {
         // 重新渲染

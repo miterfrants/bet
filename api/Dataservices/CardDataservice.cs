@@ -67,13 +67,30 @@ namespace Homo.Bet.Api
         }
 
         // 裝備卡片
-        public static UserCard EquipCard(BargainingChipDBContext dbContext, long userId, long userCardId)
+        public static UserCard EquipCard(BargainingChipDBContext dbContext, long userId, long userCardId, string triggerCondition = null)
         {
             var userCard = dbContext.UserCard
+                .Include(x => x.Card)
                 .Where(x => x.DeletedAt == null && x.Id == userCardId && x.UserId == userId)
                 .FirstOrDefault();
 
             if (userCard == null) return null;
+
+            // 檢查陷阱卡是否在週一裝備
+            if (userCard.Card.Type == CARD_TYPE.TRAP)
+            {
+                // 檢查今天是否為週一
+                if (DateTime.Now.DayOfWeek != DayOfWeek.Monday)
+                {
+                    return null;  // 陷阱卡只能在週一裝備
+                }
+
+                // 陷阱卡必須填寫觸發條件
+                if (string.IsNullOrWhiteSpace(triggerCondition))
+                {
+                    return null;
+                }
+            }
 
             // 檢查是否已達裝備上限（3張）
             var equippedCount = dbContext.UserCard
@@ -83,6 +100,7 @@ namespace Homo.Bet.Api
 
             userCard.IsEquipped = true;
             userCard.EquippedAt = DateTime.Now;
+            userCard.TriggerCondition = triggerCondition;
             dbContext.SaveChanges();
             return userCard;
         }

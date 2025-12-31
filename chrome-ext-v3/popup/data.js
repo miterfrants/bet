@@ -308,7 +308,7 @@ export const Data = {
         }
     },
     // 裝備卡片
-    EquipCard: async (token, userCardId) => {
+    EquipCard: async (token, userCardId, triggerCondition = null) => {
         const fetchOption = {
             method: 'POST',
             headers: {
@@ -316,6 +316,7 @@ export const Data = {
             },
             body: JSON.stringify({
                 userCardId: userCardId,
+                triggerCondition: triggerCondition,
             }),
         };
         const resp = await _fetch(API.CARDS_EQUIP, fetchOption);

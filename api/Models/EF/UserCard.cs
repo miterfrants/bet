@@ -34,6 +34,10 @@ namespace Homo.Bet.Api
         [Column("EquippedAt")]
         public DateTime? EquippedAt { get; set; }
 
+        [System.ComponentModel.DataAnnotations.MaxLength(512)]
+        [Column("TriggerCondition")]
+        public string TriggerCondition { get; set; }
+
         // Navigation properties
         [ForeignKey("UserId")]
         public virtual User User { get; set; }

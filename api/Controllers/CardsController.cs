@@ -116,11 +116,12 @@ namespace Homo.Bet.Api
         [Route("equip")]
         public ActionResult<dynamic> EquipCard([FromBody] DTOs.EquipCard dto, DTOs.JwtExtraPayload extraPayload)
         {
-            var userCard = CardDataservice.EquipCard(_dbContext, extraPayload.Id, dto.UserCardId);
+            var userCard = CardDataservice.EquipCard(_dbContext, extraPayload.Id, dto.UserCardId, dto.TriggerCondition);
 
             if (userCard == null)
             {
-                return BadRequest(new { message = "裝備失敗，可能已達上限（最多3張）或卡片不存在" });
+                // 需要更詳細的錯誤訊息，但先用通用訊息
+                return BadRequest(new { message = "裝備失敗，可能原因：已達上限（最多3張）、卡片不存在、陷阱卡只能在週一裝備、或陷阱卡未填寫觸發條件" });
             }
 
             return new
@@ -131,7 +132,8 @@ namespace Homo.Bet.Api
                     id = userCard.Id,
                     cardId = userCard.CardId,
                     isEquipped = userCard.IsEquipped,
-                    equippedAt = userCard.EquippedAt
+                    equippedAt = userCard.EquippedAt,
+                    triggerCondition = userCard.TriggerCondition
                 }
             };
         }
