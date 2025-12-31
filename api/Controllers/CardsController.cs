@@ -92,8 +92,8 @@ namespace Homo.Bet.Api
                 return BadRequest(new { message = "存款不足" });
             }
 
-            // 扣除 coins（使用 BUY 類型，數量為負數）
-            var coinLogDto = new DTOs.CoinLog { Qty = -card.Cost };
+            // 扣除 coins（使用 BUY 類型）
+            var coinLogDto = new DTOs.CoinLog { Qty = card.Cost };
             CoinsLogDataService.Create(_dbContext, extraPayload.Id, null, extraPayload.Id, COIN_LOG_TYPE.BUY, coinLogDto);
 
             // 購買卡片
