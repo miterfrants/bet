@@ -25,6 +25,7 @@ namespace Homo.Bet.Api
         public virtual DbSet<CoinLog> CoinLog { get; set; }
         public virtual DbSet<Reward> Reward { get; set; }
         public virtual DbSet<Card> Card { get; set; }
+        public virtual DbSet<CardTemplate> CardTemplate { get; set; }
         public virtual DbSet<UserCard> UserCard { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -118,6 +119,29 @@ namespace Homo.Bet.Api
                 entity.HasIndex(p => new { p.DeletedAt });
                 entity.HasIndex(p => new { p.Type });
                 entity.HasIndex(p => new { p.LeaveDate });
+            });
+
+            modelBuilder.Entity<CardTemplate>(entity =>
+            {
+                entity.HasIndex(p => new { p.DeletedAt });
+                entity.HasIndex(p => new { p.Type });
+                entity.HasIndex(p => new { p.Name });
+            });
+
+            modelBuilder.Entity<Card>(entity =>
+            {
+                entity.HasIndex(p => new { p.DeletedAt });
+                entity.HasIndex(p => new { p.IsAvailable });
+                entity.HasIndex(p => new { p.CardTemplateId });
+                entity.HasOne(p => p.CardTemplate).WithMany().HasForeignKey(p => p.CardTemplateId);
+            });
+
+            modelBuilder.Entity<UserCard>(entity =>
+            {
+                entity.HasIndex(p => new { p.DeletedAt });
+                entity.HasIndex(p => new { p.UserId });
+                entity.HasIndex(p => new { p.CardId });
+                entity.HasIndex(p => new { p.IsEquipped });
             });
         }
 

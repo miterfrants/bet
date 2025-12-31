@@ -4,8 +4,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Homo.Bet.Api
 {
-    [Table("Card")]
-    public partial class Card
+    [Table("CardTemplate")]
+    public partial class CardTemplate
     {
         [Key]
         [System.ComponentModel.DataAnnotations.Required]
@@ -38,14 +38,8 @@ namespace Homo.Bet.Api
         [Column("Cost")]
         public int Cost { get; set; }
 
-        [Column("IsAvailable")]
-        public bool IsAvailable { get; set; }
-
-        [Column("CardTemplateId")]
-        public long? CardTemplateId { get; set; }
-
-        // Navigation property
-        [ForeignKey("CardTemplateId")]
-        public virtual CardTemplate CardTemplate { get; set; }
+        [System.ComponentModel.DataAnnotations.Required]
+        [Column("Probability")]
+        public decimal Probability { get; set; }  // 出現機率 (0.0 ~ 1.0)
     }
 }

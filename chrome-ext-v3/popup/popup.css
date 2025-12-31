@@ -52,6 +52,7 @@ body { padding: 0; }
     margin-top: 20px;
     padding-top: 20px;
     border-top: 1px solid #e0e0e0;
+    overflow: hidden;
 }
 
 .cards-list {
@@ -147,6 +148,7 @@ body { padding: 0; }
 
 /* 使用者卡片側邊欄 */
 .user-cards-sidebar {
+    overflow-x: hidden;
     overflow-y: auto;
     max-height: 500px;
     padding: 0 10px;
@@ -251,6 +253,279 @@ body { padding: 0; }
     font-weight: 600;
 }
 
-.cards-list { 
+.cards-list {
     margin-bottom: 30px;
+}
+
+/* Card Store runway - 復用現有 runway 動畫機制 */
+.card-runway {
+    width: calc(200% + 40px);
+    transition: transform 0.3s;
+    overflow: hidden;
+}
+
+.card-runway.confirm {
+    transform: translateX(calc(-50% - 20px));
+}
+
+/* 卡片確認對話框容器 */
+.card-confirm {
+    width: calc(50% - 20px);
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    background: #fff;
+    overflow-y: auto;
+    max-height: 400px;
+    margin-left: 40px;
+    box-sizing: border-box;
+}
+
+/* 卡片詳情區 */
+.card-confirm .card-detail {
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0;
+    margin-bottom: 15px;
+}
+
+.card-confirm .card-detail h2 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    color: #333;
+    font-weight: 600;
+}
+
+.card-confirm .card-detail .card-confirm-type {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.card-confirm .card-detail .card-confirm-type.magic {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.card-confirm .card-detail .card-confirm-type.trap {
+    background: #fce4ec;
+    color: #c2185b;
+}
+
+.card-confirm .card-detail .card-confirm-type.buff {
+    background: #e8f5e9;
+    color: #388e3c;
+}
+
+.card-confirm .card-detail .card-confirm-description {
+    margin: 8px 0 0 0;
+    font-size: 12px;
+    color: #666;
+    line-height: 1.4;
+}
+
+/* 成本摘要區 */
+.card-confirm-cost-summary {
+    background: #f9f9f9;
+    border: 1px solid #f0f0f0;
+    border-radius: 6px;
+    padding: 12px;
+    margin: 15px 0;
+}
+
+.card-confirm-cost-summary .cost-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 12px;
+}
+
+.card-confirm-cost-summary .cost-item .label {
+    color: #666;
+    min-width: 80px;
+}
+
+.card-confirm-cost-summary .cost-item span:not(.label) {
+    font-weight: 600;
+    color: #333;
+    margin-right: 4px;
+}
+
+.card-confirm-cost-summary .cost-item img {
+    width: 14px;
+    height: 14px;
+}
+
+/* 購買後餘額 - 特殊樣式 */
+.card-confirm-cost-summary .cost-item.remaining {
+    color: #388e3c;
+    font-weight: 600;
+    padding-top: 8px;
+    border-top: 1px solid #e0e0e0;
+    margin-top: 8px;
+}
+
+.card-confirm-cost-summary .cost-item.remaining span:not(.label) {
+    color: #388e3c;
+}
+
+/* 警告提示 */
+.card-confirm .warning {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 4px;
+    padding: 10px;
+    margin: 12px 0;
+    font-size: 12px;
+    color: #856404;
+}
+
+/* 邊距補整 */
+.marg-t-10 {
+    margin-top: 10px;
+}
+
+/* 確認和取消按鈕 */
+.card-confirm .btn-cancel-confirm,
+.card-confirm .btn-card-buy {
+    background-color: #f0f0f0;
+    border: 1px solid #d0d0d0;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.card-confirm .btn-cancel-confirm:hover {
+    background-color: #e0e0e0;
+}
+
+.card-confirm .btn-card-buy {
+    background-color: #fac32d;
+    border-color: #e5ac11;
+    color: #333;
+}
+
+.card-confirm .btn-card-buy:hover {
+    background-color: #e5ac11;
+}
+
+.card-confirm .btn-card-buy:disabled {
+    background-color: #ccc;
+    border-color: #999;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* 裝備確認容器 */
+.equip-container {
+    overflow: hidden;
+}
+
+/* 裝備確認 runway */
+.equip-runway {
+    width: calc(200% + 40px);
+    transition: transform 0.3s;
+    overflow: hidden;
+}
+
+.equip-runway.confirm {
+    transform: translateX(calc(-50% - 20px));
+}
+
+/* 裝備確認對話框容器 */
+.equip-confirm {
+    width: calc(50% - 20px);
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    background: #fff;
+    overflow-y: auto;
+    max-height: 500px;
+    margin-left: 40px;
+    box-sizing: border-box;
+}
+
+.equip-confirm .card-detail {
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0;
+    margin-bottom: 15px;
+}
+
+.equip-confirm .card-detail h3 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    color: #333;
+    font-weight: 600;
+}
+
+.equip-confirm .card-detail .equip-confirm-type {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.equip-confirm .card-detail .equip-confirm-type.magic {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.equip-confirm .card-detail .equip-confirm-type.trap {
+    background: #fce4ec;
+    color: #c2185b;
+}
+
+.equip-confirm .card-detail .equip-confirm-type.buff {
+    background: #e8f5e9;
+    color: #388e3c;
+}
+
+.equip-confirm .warning {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 4px;
+    padding: 10px;
+    margin: 12px 0;
+    font-size: 12px;
+    color: #856404;
+}
+
+.equip-confirm .equip-info {
+    font-size: 12px;
+    color: #666;
+    margin: 10px 0;
+    line-height: 1.5;
+}
+
+.equip-confirm .btn-cancel-equip,
+.equip-confirm .btn-confirm-equip {
+    background-color: #f0f0f0;
+    border: 1px solid #d0d0d0;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.equip-confirm .btn-cancel-equip:hover {
+    background-color: #e0e0e0;
+}
+
+.equip-confirm .btn-confirm-equip {
+    background-color: #fac32d;
+    border-color: #e5ac11;
+    color: #333;
+}
+
+.equip-confirm .btn-confirm-equip:hover {
+    background-color: #e5ac11;
 }

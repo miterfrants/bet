@@ -24,15 +24,24 @@ namespace Homo.Bet.Api
                 .FirstOrDefault();
         }
 
-        // 購買卡片（建立 UserCard 紀錄）
+        // 購買卡片（建立 UserCard 紀錄 + Soft Delete Card）
         public static UserCard BuyCard(BargainingChipDBContext dbContext, long userId, long cardId)
         {
+            // 建立 UserCard 紀錄
             UserCard record = new UserCard();
             record.UserId = userId;
             record.CardId = cardId;
             record.IsEquipped = false;
             record.CreatedAt = DateTime.Now;
             dbContext.UserCard.Add(record);
+
+            // Soft Delete Card（標記為已售出，不再出現在商店）
+            var card = dbContext.Card.FirstOrDefault(x => x.Id == cardId);
+            if (card != null)
+            {
+                card.DeletedAt = DateTime.Now;
+            }
+
             dbContext.SaveChanges();
             return record;
         }
@@ -89,6 +98,25 @@ namespace Homo.Bet.Api
 
             userCard.IsEquipped = false;
             userCard.EquippedAt = null;
+            dbContext.SaveChanges();
+            return userCard;
+        }
+
+        // 使用卡片（僅限魔法卡，使用後立即消失）
+        public static UserCard UseCard(BargainingChipDBContext dbContext, long userId, long userCardId)
+        {
+            var userCard = dbContext.UserCard
+                .Include(x => x.Card)
+                .Where(x => x.DeletedAt == null && x.Id == userCardId && x.UserId == userId)
+                .FirstOrDefault();
+
+            if (userCard == null) return null;
+
+            // 只有魔法卡可以使用（陷阱卡和增益卡是裝備）
+            if (userCard.Card.Type != CARD_TYPE.MAGIC) return null;
+
+            // 使用後立即 soft delete
+            userCard.DeletedAt = DateTime.Now;
             dbContext.SaveChanges();
             return userCard;
         }

@@ -251,6 +251,8 @@ async function initCardSystem() {
     const respCards = await Data.GetCards(storage.token);
     if (respCards.status === RESPONSE_STATUS.OK) {
         renderCardStore(respCards.data.cards);
+        // 初始化確認對話框事件監聽
+        initCardBuyConfirmEvents();
     }
 
     // 從 API 取得使用者卡片並渲染
@@ -267,7 +269,12 @@ function renderCardStore(cards) {
     }
 
     cardsListEl.innerHTML = cards.map(card => `
-        <div class="card-item" data-card-id="${card.id}">
+        <div class="card-item"
+             data-card-id="${card.id}"
+             data-card-name="${card.name}"
+             data-card-type="${card.type}"
+             data-card-description="${card.description}"
+             data-card-cost="${card.cost}">
             <div class="card-name">${card.name}</div>
             <span class="card-type ${CARD_TYPE_CLASS[card.type]}">${CARD_TYPE_NAME[card.type]}</span>
             <div class="card-description">${card.description}</div>
@@ -282,16 +289,81 @@ function renderCardStore(cards) {
 
     // 綁定購買按鈕事件
     document.querySelectorAll('.card-item button').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
             e.stopPropagation();
-            const cardId = Number(e.currentTarget.dataset.cardId);
-            buyCard(cardId);
+            const cardItem = e.currentTarget.closest('.card-item');
+
+            // 顯示購買確認對話框
+            await showCardBuyConfirm(
+                Number(cardItem.dataset.cardId),
+                cardItem.dataset.cardName,
+                cardItem.dataset.cardType,
+                cardItem.dataset.cardDescription,
+                Number(cardItem.dataset.cardCost)
+            );
         });
     });
 }
 
-// 購買卡片
-async function buyCard(cardId) {
+// 顯示卡片購買確認對話框
+async function showCardBuyConfirm(cardId, cardName, cardType, cardDescription, cardCost) {
+    // 獲取當前餘額
+    const storage = await chrome.storage.sync.get(['earnCoins']);
+    const currentBalance = storage.earnCoins || 0;
+    const remainingBalance = currentBalance - cardCost;
+
+    // 檢查餘額是否足夠
+    if (currentBalance < cardCost) {
+        alert('餘額不足，無法購買此卡片');
+        return;
+    }
+
+    // 更新確認對話框信息
+    const cardRunway = document.querySelector('.card-runway');
+    const cardConfirm = cardRunway.querySelector('.card-confirm');
+
+    // 填充卡片信息
+    cardConfirm.querySelector('.card-confirm-name').textContent = cardName;
+    cardConfirm.querySelector('.card-confirm-type').className = `card-confirm-type ${CARD_TYPE_CLASS[cardType]}`;
+    cardConfirm.querySelector('.card-confirm-type').textContent = CARD_TYPE_NAME[cardType];
+    cardConfirm.querySelector('.card-confirm-description').textContent = cardDescription;
+
+    // 填充成本信息
+    cardConfirm.querySelector('.card-confirm-cost').textContent = cardCost;
+    cardConfirm.querySelector('.current-balance').textContent = currentBalance;
+    cardConfirm.querySelector('.remaining-balance').textContent = remainingBalance;
+
+    // 存儲卡片 ID 以供確認時使用
+    cardConfirm.dataset.cardId = cardId;
+
+    // 顯示確認對話框（添加 confirm class 觸發滑動動畫）
+    cardRunway.classList.add('confirm');
+}
+
+// 初始化卡片購買確認對話框的事件監聽
+function initCardBuyConfirmEvents() {
+    const cardRunway = document.querySelector('.card-runway');
+    const cardConfirm = cardRunway.querySelector('.card-confirm');
+
+    // 取消按鈕
+    cardConfirm.querySelector('.btn-cancel-confirm').addEventListener('click', (e) => {
+        cardRunway.classList.remove('confirm');
+    });
+
+    // 確認購買按鈕
+    cardConfirm.querySelector('.btn-card-buy').addEventListener('click', async (e) => {
+        const cardId = Number(cardConfirm.dataset.cardId);
+
+        // 調用購買函數
+        await buyCardConfirmed(cardId);
+
+        // 關閉確認對話框
+        cardRunway.classList.remove('confirm');
+    });
+}
+
+// 確認購買卡片（API 調用）
+async function buyCardConfirmed(cardId) {
     const storage = await chrome.storage.sync.get(['token']);
     if (!storage.token) {
         alert('請先登入');
@@ -337,19 +409,8 @@ async function renderUserCards() {
                 <div class="equipped-badge">已裝備</div>
                 <div class="card-name">${card.name}</div>
                 <span class="card-type ${CARD_TYPE_CLASS[card.type]}">${CARD_TYPE_NAME[card.type]}</span>
-                <div class="card-actions">
-                    <button class="unequip-btn" data-user-card-id="${card.id}">卸下</button>
-                </div>
             </div>
         `).join('');
-
-        // 綁定卸下按鈕事件
-        document.querySelectorAll('.unequip-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const userCardId = Number(e.currentTarget.dataset.userCardId);
-                unequipCard(userCardId);
-            });
-        });
     }
 
     // 渲染擁有的卡片
@@ -359,29 +420,136 @@ async function renderUserCards() {
     } else {
         ownedCardsListEl.innerHTML = userCards.map(card => {
             const isEquipped = card.isEquipped;
+            const isMagicCard = card.type === 'MAGIC';
+
             return `
-                <div class="user-card-item ${isEquipped ? 'equipped' : ''}" data-user-card-id="${card.id}">
+                <div class="user-card-item ${isEquipped ? 'equipped' : ''}"
+                     data-user-card-id="${card.id}"
+                     data-card-name="${card.name}"
+                     data-card-type="${card.type}">
                     ${isEquipped ? '<div class="equipped-badge">已裝備</div>' : ''}
                     <div class="card-name">${card.name}</div>
                     <span class="card-type ${CARD_TYPE_CLASS[card.type]}">${CARD_TYPE_NAME[card.type]}</span>
                     <div class="card-actions">
-                        <button class="equip-btn ${isEquipped ? '' : 'equip'}"
-                                data-user-card-id="${card.id}"
-                                ${isEquipped || equippedCards.length >= 3 ? 'disabled' : ''}>
-                            ${isEquipped ? '已裝備' : (equippedCards.length >= 3 ? '已滿' : '裝備')}
-                        </button>
+                        ${isMagicCard ?
+                            `<button class="use-btn" data-user-card-id="${card.id}">使用</button>` :
+                            `<button class="equip-btn ${isEquipped ? '' : 'equip'}"
+                                    data-user-card-id="${card.id}"
+                                    ${isEquipped || equippedCards.length >= 3 ? 'disabled' : ''}>
+                                ${isEquipped ? '已裝備' : (equippedCards.length >= 3 ? '已滿' : '裝備')}
+                            </button>`
+                        }
                     </div>
                 </div>
             `;
         }).join('');
 
-        // 綁定裝備按鈕事件
+        // 綁定裝備按鈕事件（陷阱卡和增益卡）
         document.querySelectorAll('.equip-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const userCardId = Number(e.currentTarget.dataset.userCardId);
-                equipCard(userCardId);
+                if (e.currentTarget.disabled) return;
+
+                const cardItem = e.currentTarget.closest('.user-card-item');
+                const userCardId = Number(cardItem.dataset.userCardId);
+                const cardName = cardItem.dataset.cardName;
+                const cardType = cardItem.dataset.cardType;
+
+                // 顯示裝備確認對話框
+                showEquipConfirm(userCardId, cardName, cardType);
             });
         });
+
+        // 綁定使用按鈕事件（魔法卡）
+        document.querySelectorAll('.use-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const cardItem = e.currentTarget.closest('.user-card-item');
+                const userCardId = Number(cardItem.dataset.userCardId);
+                const cardName = cardItem.dataset.cardName;
+
+                // 使用魔法卡
+                await useMagicCard(userCardId, cardName);
+            });
+        });
+    }
+}
+
+// 顯示裝備確認對話框
+function showEquipConfirm(userCardId, cardName, cardType) {
+    const equipRunway = document.querySelector('.equip-runway');
+    const equipConfirm = equipRunway.querySelector('.equip-confirm');
+
+    // 填充卡片信息
+    equipConfirm.querySelector('.equip-confirm-name').textContent = cardName;
+    equipConfirm.querySelector('.equip-confirm-type').className = `equip-confirm-type ${CARD_TYPE_CLASS[cardType]}`;
+    equipConfirm.querySelector('.equip-confirm-type').textContent = CARD_TYPE_NAME[cardType];
+
+    // 存儲卡片 ID 以供確認時使用
+    equipConfirm.dataset.userCardId = userCardId;
+
+    // 顯示確認對話框（添加 confirm class 觸發滑動動畫）
+    equipRunway.classList.add('confirm');
+}
+
+// 初始化裝備確認對話框的事件監聽
+function initEquipConfirmEvents() {
+    const equipRunway = document.querySelector('.equip-runway');
+    const equipConfirm = equipRunway.querySelector('.equip-confirm');
+
+    // 取消按鈕
+    equipConfirm.querySelector('.btn-cancel-equip').addEventListener('click', (e) => {
+        equipRunway.classList.remove('confirm');
+    });
+
+    // 確認裝備按鈕
+    equipConfirm.querySelector('.btn-confirm-equip').addEventListener('click', async (e) => {
+        const userCardId = Number(equipConfirm.dataset.userCardId);
+
+        // 調用裝備函數
+        await equipCardConfirmed(userCardId);
+
+        // 關閉確認對話框
+        equipRunway.classList.remove('confirm');
+    });
+}
+
+// 確認裝備卡片（API 調用）
+async function equipCardConfirmed(userCardId) {
+    const storage = await chrome.storage.sync.get(['token']);
+    if (!storage.token) {
+        alert('請先登入');
+        return;
+    }
+
+    // 調用 API 裝備卡片
+    const resp = await Data.EquipCard(storage.token, userCardId);
+
+    if (resp.status === RESPONSE_STATUS.OK) {
+        // 重新渲染
+        renderUserCards();
+    } else {
+        alert(resp.data.errorMsg || '裝備失敗');
+    }
+}
+
+// 使用魔法卡
+async function useMagicCard(userCardId, cardName) {
+    const storage = await chrome.storage.sync.get(['token']);
+    if (!storage.token) {
+        alert('請先登入');
+        return;
+    }
+
+    // 顯示使用確認 alert
+    alert(`現在使用 ${cardName}`);
+
+    // 調用 API 使用卡片
+    const resp = await Data.UseCard(storage.token, userCardId);
+
+    if (resp.status === RESPONSE_STATUS.OK) {
+        // 重新渲染卡片列表
+        renderUserCards();
+    } else {
+        alert(resp.data.errorMsg || '使用失敗');
     }
 }
 
@@ -437,3 +605,6 @@ document.querySelector('.close-sidebar').addEventListener('click', () => {
 
 // 初始化卡片系統
 initCardSystem();
+
+// 初始化裝備確認事件
+initEquipConfirmEvents();

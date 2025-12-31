@@ -94,6 +94,20 @@ namespace Homo.Bet.Api
                 c.TimeZoneInfo = TimeZoneInfo.Local;
                 c.CronExpression = @"30 20 * * *";
             });
+
+            // 註冊每週卡片生成服務（每週一 00:00 執行）
+            services.AddCronJob<WeeklyCardGenerationCronJob>(c =>
+            {
+                c.TimeZoneInfo = TimeZoneInfo.Local;
+                c.CronExpression = @"0 0 * * 1";  // 每週一 00:00
+            });
+
+            // 註冊每日過期卡片檢查服務（每天 00:00 執行）
+            services.AddCronJob<CheckExpiredCardsCronJob>(c =>
+            {
+                c.TimeZoneInfo = TimeZoneInfo.Local;
+                c.CronExpression = @"0 0 * * *";  // 每天 00:00
+            });
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo() { Title = "Api Doc", Version = "v1" });

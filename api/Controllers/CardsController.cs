@@ -159,5 +159,29 @@ namespace Homo.Bet.Api
                 }
             };
         }
+
+        // POST /v1/cards/use - 使用卡片（僅限魔法卡）
+        [HttpPost]
+        [Route("use")]
+        public ActionResult<dynamic> UseCard([FromBody] DTOs.EquipCard dto, DTOs.JwtExtraPayload extraPayload)
+        {
+            var userCard = CardDataservice.UseCard(_dbContext, extraPayload.Id, dto.UserCardId);
+
+            if (userCard == null)
+            {
+                return BadRequest(new { message = "使用失敗，卡片不存在或不是魔法卡" });
+            }
+
+            return new
+            {
+                message = "使用成功",
+                cardName = userCard.Card.Name,
+                userCard = new
+                {
+                    id = userCard.Id,
+                    cardId = userCard.CardId
+                }
+            };
+        }
     }
 }

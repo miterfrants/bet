@@ -363,6 +363,34 @@ export const Data = {
             };
         }
     },
+    // 使用卡片（僅限魔法卡）
+    UseCard: async (token, userCardId) => {
+        const fetchOption = {
+            method: 'POST',
+            headers: {
+                Authorization: 'Bearer ' + token,
+            },
+            body: JSON.stringify({
+                userCardId: userCardId,
+            }),
+        };
+        const resp = await _fetch(API.CARDS_USE, fetchOption);
+        if (resp.status === 200) {
+            const data = await resp.json();
+            return {
+                status: RESPONSE_STATUS.OK,
+                data,
+            };
+        } else {
+            const data = await resp.json();
+            return {
+                status: RESPONSE_STATUS.FAILED,
+                data: {
+                    errorMsg: data.message || 'use card error',
+                },
+            };
+        }
+    },
 };
 
 const _fetch = (url, option, withCatch) => {
