@@ -106,7 +106,7 @@ namespace Homo.Bet.Api
                         {
                             CoinsLogDataService.Create(dbContext, user.BetUserId, null, 0, COIN_LOG_TYPE.PUNISHMENT_FOR_INSUFFICIENT_WORKING_HOURS, new DTOs.CoinLog
                             {
-                                Qty = -5
+                                Qty = 5
                             });
                         }
                     }
