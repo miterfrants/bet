@@ -49,7 +49,7 @@ namespace Homo.Bet.Api
         }
 
         // 根據模板生成卡片
-        public static Card CreateCardFromTemplate(BargainingChipDBContext dbContext, CardTemplate template)
+        public static Card CreateCardFromTemplate(BargainingChipDBContext dbContext, CardTemplate template, bool saveChanges = true)
         {
             Card card = new Card();
             card.CardTemplateId = template.Id;
@@ -61,7 +61,11 @@ namespace Homo.Bet.Api
             card.CreatedAt = DateTime.Now;
 
             dbContext.Card.Add(card);
-            dbContext.SaveChanges();
+
+            if (saveChanges)
+            {
+                dbContext.SaveChanges();
+            }
 
             return card;
         }
@@ -81,8 +85,6 @@ namespace Homo.Bet.Api
                 card.IsAvailable = false;
             }
 
-            dbContext.SaveChanges();
-
             // 根據機率隨機抽取 5 個模板
             var templates = DrawRandomTemplates(dbContext, 5);
 
@@ -90,9 +92,12 @@ namespace Homo.Bet.Api
             var newCards = new List<Card>();
             foreach (var template in templates)
             {
-                var card = CreateCardFromTemplate(dbContext, template);
+                var card = CreateCardFromTemplate(dbContext, template, saveChanges: false);
                 newCards.Add(card);
             }
+
+            // 一次性儲存所有變更
+            dbContext.SaveChanges();
 
             return newCards;
         }
