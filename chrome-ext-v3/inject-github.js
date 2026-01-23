@@ -7,21 +7,21 @@ window.isIssueOlderThanSevenDays = (elIssue) => {
     if (!relativeTimeElement) {
         return false;
     }
-    
+
     const datetimeStr = relativeTimeElement.getAttribute('datetime');
     if (!datetimeStr) {
         return false;
     }
-    
+
     // 解析 GMT+0 時間
     const issueCreatedDate = new Date(datetimeStr);
-    
+
     // 取得現在時間 (GMT+8)
     const now = new Date();
-    
+
     // 計算 7 天前的時間
-    const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
-    
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
     // 檢查 issue 建立時間是否早於 7 天前
     return issueCreatedDate < sevenDaysAgo;
 };
@@ -29,11 +29,12 @@ window.isIssueOlderThanSevenDays = (elIssue) => {
 window.injectHead = (betCoins) => {
     const coinIconHtml =
         '<div class="overflow-hidden" style="width:20px; height: 20px; margin-left: 10px; margin-right: 10px"><img style="width: 100%; height: 100%; object-fit: contain;" src="https://bet.homo.tw/assets/imgs/coin.png" /> </div> X ';
-    const elNotification = document.querySelector('notification-indicator');
+    const elNotification = document.querySelector(
+        '[data-testid="top-nav-right"]'
+    );
     const elDetailMenu = document.querySelector('details-menu');
-    const elHeaderItem = elNotification
-        ? elNotification.parentNode
-        : elDetailMenu.parentNode;
+    console.log(elNotification, elDetailMenu);
+    const elHeaderItem = elNotification || elDetailMenu.parentNode;
     const elHeader = elHeaderItem.parentNode;
 
     if (elHeader.dataset.injected !== 'true') {
@@ -49,6 +50,8 @@ window.injectHead = (betCoins) => {
         });
         elHeaderItemBetIcon.innerHTML = `${coinIconHtml}<span class="homo-bet-coins" style="padding-left:8px;">${betCoins}</span> `;
         elHeaderItemBetIcon.style.whiteSpace = 'nowrap';
+        elHeaderItemBetIcon.style.paddingTop = '16px';
+        elHeaderItemBetIcon.style.marginLeft = '32px';
         elHeader.insertBefore(elHeaderItemBetIcon, elHeaderItem);
         elHeaderItemBetIcon.querySelector('.homo-bet-coins').dataset[
             `${window.variablePrefix}betCoins`
@@ -280,9 +283,8 @@ window.injectHTMLToIssueElement = async (
         if (extraData.assigneeId) {
             elIssue.querySelector('.btn-claim').classList.add('d-none');
             elIssue.querySelector('.assignee').classList.remove('d-none');
-            elIssue.querySelector(
-                '.assignee'
-            ).innerHTML = `${extraData.assignee?.lastName}${extraData.assignee?.firstName}`;
+            elIssue.querySelector('.assignee').innerHTML =
+                `${extraData.assignee?.lastName}${extraData.assignee?.firstName}`;
             elIssue
                 .querySelector('.exptected-finish-at')
                 .classList.remove('d-none');
@@ -299,14 +301,15 @@ window.injectHTMLToIssueElement = async (
                 .classList.remove('d-none');
         } else {
             // 檢查 issue 是否建立超過 7 天
-            const isOlderThanSevenDays = window.isIssueOlderThanSevenDays(elIssue);
-            
+            const isOlderThanSevenDays =
+                window.isIssueOlderThanSevenDays(elIssue);
+
             if (isOlderThanSevenDays) {
                 elIssue.querySelector('.btn-claim').classList.remove('d-none');
             } else {
                 elIssue.querySelector('.btn-claim').classList.add('d-none');
             }
-            
+
             elIssue.querySelector('.assignee').classList.add('d-none');
             elIssue.querySelector('.assignee').innerHTML = '';
             elIssue
@@ -478,7 +481,8 @@ window.injectHTMLToIssueElement = async (
                                     .then((storage) => {
                                         elIssue.querySelector(
                                             '.assignee'
-                                        ).innerHTML = `${storage.userInfo.lastName}${storage.userInfo.firstName}`;
+                                        ).innerHTML =
+                                            `${storage.userInfo.lastName}${storage.userInfo.firstName}`;
                                     });
                                 elIssue
                                     .querySelector('.exptected-finish-at')
@@ -593,24 +597,35 @@ window.injectButtonsToIssuePage = async (issueId, extraData) => {
 
     const isAssignee = storage.userInfo.id === extraData.assigneeId;
     const beMarkedFinish = extraData.status === 2;
-    const shouldShowMarkFinishButton = extraData.status < 3 && isAssignee && !beMarkedFinish;
-    const shouldShowDoneButton = extraData.status < 3 && !isAssignee && beMarkedFinish;
-    
+    const shouldShowMarkFinishButton =
+        extraData.status < 3 && isAssignee && !beMarkedFinish;
+    const shouldShowDoneButton =
+        extraData.status < 3 && !isAssignee && beMarkedFinish;
+
     // 檢查是否應該顯示 Claim 按鈕（沒有 assignee 且超過 7 天）
     const isOlderThanSevenDays = window.isIssueOlderThanSevenDays(document);
     const shouldShowClaimButton = !extraData.assigneeId && isOlderThanSevenDays;
-    
-    console.log(extraData, { shouldShowMarkFinishButton, shouldShowDoneButton, shouldShowClaimButton });
-    
-    if (shouldShowMarkFinishButton || shouldShowDoneButton || shouldShowClaimButton) {
+
+    console.log(extraData, {
+        shouldShowMarkFinishButton,
+        shouldShowDoneButton,
+        shouldShowClaimButton,
+    });
+
+    if (
+        shouldShowMarkFinishButton ||
+        shouldShowDoneButton ||
+        shouldShowClaimButton
+    ) {
         const buttonContainer = document.createElement('div');
         buttonContainer.classList.add('homo-button-container');
         buttonContainer.style.marginBottom = '16px';
-        buttonContainer.style.borderBottom = '1px solid var(--borderColor-muted)';
+        buttonContainer.style.borderBottom =
+            '1px solid var(--borderColor-muted)';
         buttonContainer.style.width = 'calc(100% - 20px)';
         buttonContainer.style.marginLeft = '8px';
         buttonContainer.style.marginRight = '12px';
-        
+
         let buttonsHtml = `
             <style>
                 .homo-btn {
@@ -625,7 +640,7 @@ window.injectButtonsToIssuePage = async (issueId, extraData) => {
             </style>
             <h3 style="color: var(--fgColor-muted); font-size: var(--text-body-size-small); left: var(--base-size-8); pointer-events: none;">Homo Bet</h3>
         `;
-        
+
         if (shouldShowMarkFinishButton) {
             buttonsHtml += `
                 <button class="btn-mark-finish homo-btn text-sm px-3" style="margin-top: 8px; margin-bottom: 8px;">
@@ -636,7 +651,7 @@ window.injectButtonsToIssuePage = async (issueId, extraData) => {
                 </button>
             `;
         }
-        
+
         if (shouldShowDoneButton) {
             buttonsHtml += `
                 <button class="btn-done homo-btn text-sm px-3" style="margin-top: 8px; margin-bottom: 8px;">
@@ -647,7 +662,7 @@ window.injectButtonsToIssuePage = async (issueId, extraData) => {
                 </button>
             `;
         }
-        
+
         if (shouldShowClaimButton) {
             buttonsHtml += `
                 <button class="btn-claim homo-btn text-sm px-3" style="margin-top: 8px; margin-bottom: 8px;">
@@ -658,7 +673,7 @@ window.injectButtonsToIssuePage = async (issueId, extraData) => {
                 </button>
             `;
         }
-        
+
         buttonContainer.innerHTML = buttonsHtml;
 
         if (shouldShowMarkFinishButton) {
@@ -705,7 +720,11 @@ window.injectButtonsToIssuePage = async (issueId, extraData) => {
                         return;
                     }
                     chrome.runtime.sendMessage(
-                        { action: 'claim', externalId: extraData.id, workDays: days },
+                        {
+                            action: 'claim',
+                            externalId: extraData.id,
+                            workDays: days,
+                        },
                         (resp) => {
                             if (resp.status && resp.status === 'OK') {
                                 buttonContainer.remove();
