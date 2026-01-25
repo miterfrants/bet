@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -9,7 +8,6 @@ namespace Homo.Bet.Api
     public class CheckExpiredCardsCronJob : CronJobService
     {
         private readonly ILogger<CheckExpiredCardsCronJob> _logger;
-        private BargainingChipDBContext _dbContext;
 
         public CheckExpiredCardsCronJob(
             IScheduleConfig<CheckExpiredCardsCronJob> config,
@@ -32,30 +30,16 @@ namespace Homo.Bet.Api
 
             try
             {
-                _dbContext = _serviceProvider.GetService<BargainingChipDBContext>();
-
-                // 計算過期時間（7天前）
-                var expiredDate = DateTime.Now.AddDays(-7);
-
-                // 查詢過期的陷阱卡和增益卡（Type 1 和 2）
-                var expiredCards = _dbContext.UserCard
-                    .Where(x => x.DeletedAt == null
-                        && x.IsEquipped == true
-                        && x.EquippedAt != null
-                        && x.EquippedAt < expiredDate
-                        && (x.Card.Type == CARD_TYPE.TRAP || x.Card.Type == CARD_TYPE.BUFF))
-                    .ToList();
-
-                foreach (var userCard in expiredCards)
+                // 使用 scope 來確保每次執行都有獨立的 DbContext
+                using (var scope = _serviceProvider.CreateScope())
                 {
-                    // Soft delete 過期的卡片
-                    userCard.DeletedAt = DateTime.Now;
-                    userCard.IsEquipped = false;
+                    var cardRepository = scope.ServiceProvider.GetRequiredService<CardRepository>();
+
+                    // 移除過期的卡片（裝備超過 7 天）
+                    var removedCount = cardRepository.RemoveExpiredCards(7);
+
+                    _logger.LogInformation($"成功移除 {removedCount} 張過期卡片");
                 }
-
-                _dbContext.SaveChanges();
-
-                _logger.LogInformation($"成功移除 {expiredCards.Count} 張過期卡片");
             }
             catch (Exception ex)
             {

@@ -8,10 +8,12 @@ namespace Homo.Bet.Api
     [AuthorizeFactory]
     public class CardsController : ControllerBase
     {
+        private readonly CardRepository _cardRepository;
         private readonly BargainingChipDBContext _dbContext;
 
-        public CardsController(BargainingChipDBContext dbContext)
+        public CardsController(CardRepository cardRepository, BargainingChipDBContext dbContext)
         {
+            _cardRepository = cardRepository;
             _dbContext = dbContext;
         }
 
@@ -19,7 +21,7 @@ namespace Homo.Bet.Api
         [HttpGet]
         public ActionResult<dynamic> GetAvailableCards()
         {
-            var cards = CardDataservice.GetAvailableCards(_dbContext);
+            var cards = _cardRepository.GetAvailableCards();
             var cardsDto = cards.Select(card => new
             {
                 id = card.Id,
@@ -37,7 +39,7 @@ namespace Homo.Bet.Api
         [Route("my-cards")]
         public ActionResult<dynamic> GetMyCards(DTOs.JwtExtraPayload extraPayload)
         {
-            var userCards = CardDataservice.GetUserCards(_dbContext, extraPayload.Id);
+            var userCards = _cardRepository.GetUserCards(extraPayload.Id);
             var userCardsDto = userCards.Select(userCard => new
             {
                 id = userCard.Id,
@@ -59,7 +61,7 @@ namespace Homo.Bet.Api
         [Route("equipped")]
         public ActionResult<dynamic> GetEquippedCards(DTOs.JwtExtraPayload extraPayload)
         {
-            var equippedCards = CardDataservice.GetEquippedCards(_dbContext, extraPayload.Id);
+            var equippedCards = _cardRepository.GetEquippedCards(extraPayload.Id);
             var equippedCardsDto = equippedCards.Select(userCard => new
             {
                 id = userCard.Id,
@@ -79,7 +81,7 @@ namespace Homo.Bet.Api
         public ActionResult<dynamic> BuyCard([FromBody] DTOs.BuyCard dto, DTOs.JwtExtraPayload extraPayload)
         {
             // 檢查卡片是否存在
-            var card = CardDataservice.GetCardById(_dbContext, dto.CardId);
+            var card = _cardRepository.GetCardById(dto.CardId);
             if (card == null)
             {
                 return BadRequest(new { message = "卡片不存在" });
@@ -97,7 +99,7 @@ namespace Homo.Bet.Api
             CoinsLogDataService.Create(_dbContext, extraPayload.Id, null, extraPayload.Id, COIN_LOG_TYPE.BUY, coinLogDto);
 
             // 購買卡片
-            var userCard = CardDataservice.BuyCard(_dbContext, extraPayload.Id, dto.CardId);
+            var userCard = _cardRepository.BuyCard(extraPayload.Id, dto.CardId);
 
             return new
             {
@@ -116,7 +118,7 @@ namespace Homo.Bet.Api
         [Route("equip")]
         public ActionResult<dynamic> EquipCard([FromBody] DTOs.EquipCard dto, DTOs.JwtExtraPayload extraPayload)
         {
-            var userCard = CardDataservice.EquipCard(_dbContext, extraPayload.Id, dto.UserCardId, dto.TriggerCondition);
+            var userCard = _cardRepository.EquipCard(extraPayload.Id, dto.UserCardId, dto.TriggerCondition);
 
             if (userCard == null)
             {
@@ -143,7 +145,7 @@ namespace Homo.Bet.Api
         [Route("unequip")]
         public ActionResult<dynamic> UnequipCard([FromBody] DTOs.EquipCard dto, DTOs.JwtExtraPayload extraPayload)
         {
-            var userCard = CardDataservice.UnequipCard(_dbContext, extraPayload.Id, dto.UserCardId);
+            var userCard = _cardRepository.UnequipCard(extraPayload.Id, dto.UserCardId);
 
             if (userCard == null)
             {
@@ -167,7 +169,7 @@ namespace Homo.Bet.Api
         [Route("use")]
         public ActionResult<dynamic> UseCard([FromBody] DTOs.EquipCard dto, DTOs.JwtExtraPayload extraPayload)
         {
-            var userCard = CardDataservice.UseCard(_dbContext, extraPayload.Id, dto.UserCardId);
+            var userCard = _cardRepository.UseCard(extraPayload.Id, dto.UserCardId);
 
             if (userCard == null)
             {

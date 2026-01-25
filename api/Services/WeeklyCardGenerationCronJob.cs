@@ -9,7 +9,6 @@ namespace Homo.Bet.Api
     public class WeeklyCardGenerationCronJob : CronJobService
     {
         private readonly ILogger<WeeklyCardGenerationCronJob> _logger;
-        private BargainingChipDBContext _dbContext;
 
         public WeeklyCardGenerationCronJob(
             IScheduleConfig<WeeklyCardGenerationCronJob> config,
@@ -32,12 +31,16 @@ namespace Homo.Bet.Api
 
             try
             {
-                _dbContext = _serviceProvider.GetService<BargainingChipDBContext>();
+                // 使用 scope 來確保每次執行都有獨立的 DbContext
+                using (var scope = _serviceProvider.CreateScope())
+                {
+                    var cardTemplateRepository = scope.ServiceProvider.GetRequiredService<CardTemplateRepository>();
 
-                // 生成每週卡片
-                var cards = CardTemplateDataservice.GenerateWeeklyCards(_dbContext);
+                    // 生成每週卡片
+                    var cards = cardTemplateRepository.GenerateWeeklyCards();
 
-                _logger.LogInformation($"成功生成 {cards.Count} 張每週卡片");
+                    _logger.LogInformation($"成功生成 {cards.Count} 張每週卡片");
+                }
             }
             catch (Exception ex)
             {

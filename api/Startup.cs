@@ -67,6 +67,11 @@ namespace Homo.Bet.Api
             var serverVersion = new MySqlServerVersion(new Version(8, 0, 25));
             var secrets = (Homo.Bet.Api.Secrets)appSettings.Secrets;
             services.AddDbContext<BargainingChipDBContext>(options => options.UseMySql(secrets.DBConnectionString, serverVersion));
+
+            // 註冊 Repository
+            services.AddScoped<CardRepository>();
+            services.AddScoped<CardTemplateRepository>();
+
             services.AddControllers();
             services.AddCronJob<GitHubIssuesNotificationCronJob>(c =>
             {
