@@ -753,8 +753,10 @@ if (
             'betCoins',
         ]);
         window.injectHead(storage.betCoins);
-        const elIssues = document.querySelectorAll('[role="listitem"]');
-        window.injectIssuesButton(elIssues);
+        setTimeout(() => {
+            const elIssues = document.querySelectorAll('[role="listitem"]');
+            window.injectIssuesButton(elIssues);
+        }, 3000);
     })();
 }
 
