@@ -33,7 +33,6 @@ window.injectHead = (betCoins) => {
         '[data-testid="top-nav-right"]'
     );
     const elDetailMenu = document.querySelector('details-menu');
-    console.log(elNotification, elDetailMenu);
     const elHeaderItem = elNotification || elDetailMenu.parentNode;
     const elHeader = elHeaderItem.parentNode;
 
@@ -564,10 +563,12 @@ window.injectIssuesButton = async (elIssues) => {
             chrome.runtime.sendMessage(
                 { action: 'get-github-projects' },
                 (githubProjects) => {
+                    console.log(issues);
                     issues.forEach((issue) => {
                         const elIssue = document.querySelector(
-                            `[data-id="${issue.externalId}"]`
-                        );
+                            `[href="/homo-tw/itemhub/issues/${issue.externalId}"]`
+                        ).parentNode.parentNode.parentNode.parentNode
+                            .parentNode;
                         window.injectHTMLToIssueElement(
                             elIssue,
                             issue,
