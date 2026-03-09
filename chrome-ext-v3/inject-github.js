@@ -563,7 +563,6 @@ window.injectIssuesButton = async (elIssues) => {
             chrome.runtime.sendMessage(
                 { action: 'get-github-projects' },
                 (githubProjects) => {
-                    console.log(issues);
                     issues.forEach((issue) => {
                         const elIssue = document.querySelector(
                             `[href="/homo-tw/itemhub/issues/${issue.externalId}"]`
@@ -587,8 +586,6 @@ window.injectButtonsToIssuePage = async (issueId, extraData) => {
         '[data-testid="sidebar-assignees-section"]'
     );
 
-    console.log(elSidebarAssigneesSection);
-
     if (
         !elSidebarAssigneesSection ||
         elSidebarAssigneesSection.dataset.injected === 'true'
@@ -606,12 +603,6 @@ window.injectButtonsToIssuePage = async (issueId, extraData) => {
     // 檢查是否應該顯示 Claim 按鈕（沒有 assignee 且超過 7 天）
     const isOlderThanSevenDays = window.isIssueOlderThanSevenDays(document);
     const shouldShowClaimButton = !extraData.assigneeId && isOlderThanSevenDays;
-
-    console.log(extraData, {
-        shouldShowMarkFinishButton,
-        shouldShowDoneButton,
-        shouldShowClaimButton,
-    });
 
     if (
         shouldShowMarkFinishButton ||
