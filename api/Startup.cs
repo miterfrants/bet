@@ -97,7 +97,7 @@ namespace Homo.Bet.Api
             services.AddCronJob<WorkingTimeCheckCronJob>(c =>
             {
                 c.TimeZoneInfo = TimeZoneInfo.Local;
-                c.CronExpression = @"30 20 * * *";
+                c.CronExpression = @"0 2 * * *";
             });
 
             // 註冊每週卡片生成服務（每週日 00:00 執行，與發放 Coins 同時）
