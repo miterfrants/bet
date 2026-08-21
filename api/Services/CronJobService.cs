@@ -3,6 +3,7 @@ using System.Threading;
 using Cronos;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Homo.Bet.Api
 {
@@ -34,6 +35,7 @@ namespace Homo.Bet.Api
                 if (delay.TotalMilliseconds <= 0)   // prevent non-positive values from being passed into Timer
                 {
                     await ScheduleJob(cancellationToken);
+                    return;   // 已經由遞迴那次排好 timer，這裡不能再用非正數的 delay 建立 timer
                 }
                 _timer = new System.Timers.Timer(delay.TotalMilliseconds);
                 _timer.Elapsed += async (sender, args) =>
@@ -41,19 +43,49 @@ namespace Homo.Bet.Api
                     _timer.Dispose();  // reset and dispose timer
                     _timer = null;
 
+                    // Elapsed 的 handler 是 async void，只要 DoWork 丟出例外就會變成
+                    // unhandled exception 直接把整個 process 殺掉，所以一定要在這裡攔下來。
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await DoWork(cancellationToken);
+                        try
+                        {
+                            await DoWork(cancellationToken);
+                        }
+                        catch (Exception ex)
+                        {
+                            LogUnhandled(nameof(DoWork), ex);
+                        }
                     }
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await ScheduleJob(cancellationToken);    // reschedule next
+                        try
+                        {
+                            await ScheduleJob(cancellationToken);    // reschedule next
+                        }
+                        catch (Exception ex)
+                        {
+                            LogUnhandled(nameof(ScheduleJob), ex);
+                        }
                     }
                 };
                 _timer.Start();
             }
             await System.Threading.Tasks.Task.CompletedTask;
+        }
+
+        private void LogUnhandled(string stage, Exception ex)
+        {
+            var loggerFactory = _serviceProvider?.GetService(typeof(ILoggerFactory)) as ILoggerFactory;
+            var logger = loggerFactory?.CreateLogger(GetType().FullName);
+            if (logger != null)
+            {
+                logger.LogError(ex, $"{GetType().Name}.{stage} 發生未預期的例外，已忽略並繼續排下一次執行");
+            }
+            else
+            {
+                Console.WriteLine($"{GetType().Name}.{stage} 發生未預期的例外，已忽略並繼續排下一次執行: {ex}");
+            }
         }
 
         public virtual async System.Threading.Tasks.Task DoWork(CancellationToken cancellationToken)

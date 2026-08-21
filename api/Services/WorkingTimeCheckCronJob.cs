@@ -40,22 +40,22 @@ namespace Homo.Bet.Api
 
         public override async System.Threading.Tasks.Task DoWork(CancellationToken cancellationToken)
         {
-            // 星期一和星期日跳過檢查
-            // GMT+0 的星期日和星期六跳過
-            // if (DateTime.Today.DayOfWeek == DayOfWeek.Sunday || DateTime.Today.DayOfWeek == DayOfWeek.Saturday)
-            // {
-            //     return;
-            // }
-
-            _logger.LogInformation($"{DateTime.Now:hh:mm:ss} is working.");
+            _logger.LogInformation($"{DateTime.Now:HH:mm:ss} is working.");
 
             // 檢查當天的工時
             string url = $"https://api.track.toggl.com/reports/api/v3/workspace/8976470/search/time_entries/totals";
             var optionsBuilder = new DbContextOptionsBuilder<BargainingChipDBContext>();
             var serverVersion = new MySqlServerVersion(new Version(8, 0, 25));
             optionsBuilder.UseMySql(_appSettings.Secrets.DBConnectionString, serverVersion);
+            // 台北時間凌晨 02:00 跑，檢查的是「前一天」的工時
+            // 例如週六 02:00 檢查週五、週二 02:00 檢查週一
             var checkDate = System.DateTime.Now.AddDays(-1);
             var today = System.DateTime.Now;
+
+            // 只有工作天的工時要檢查，所以週日 02:00（檢查週六）和週一 02:00（檢查週日）不罰。
+            // 注意這裡不能直接用 cron 排除週日/週一，因為下面月底獎勵的判斷日
+            // （checkDate == 該月最後一天往前 7 天）有些月份會剛好落在週六日，那樣獎勵就發不出去了。
+            bool isCheckDateWorkingDay = checkDate.DayOfWeek != DayOfWeek.Saturday && checkDate.DayOfWeek != DayOfWeek.Sunday;
             var users = new List<ToggleAndBetUserMapping>{
                 new ToggleAndBetUserMapping{
                     BetUserId=4,
@@ -93,7 +93,7 @@ namespace Homo.Bet.Api
                         System.Console.WriteLine($"error :{Newtonsoft.Json.JsonConvert.SerializeObject(result, Newtonsoft.Json.Formatting.Indented)}");
                     }
 
-                    var shouldBeCheckData = timeRecords != null ? timeRecords.seconds < 5 * 60 * 60 : false;
+                    var shouldBeCheckData = isCheckDateWorkingDay && timeRecords != null && timeRecords.seconds < 5 * 60 * 60;
                     if (shouldBeCheckData)
                     {
                         // 取得今天是否有請假資料

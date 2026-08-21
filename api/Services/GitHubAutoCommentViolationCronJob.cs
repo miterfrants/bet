@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using System.Linq;
+using System.Globalization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 
@@ -32,9 +33,9 @@ namespace Homo.Bet.Api
             return base.StartAsync(cancellationToken);
         }
 
-        public override System.Threading.Tasks.Task DoWork(CancellationToken cancellationToken)
+        public override async System.Threading.Tasks.Task DoWork(CancellationToken cancellationToken)
         {
-            _logger.LogInformation($"{DateTime.Now:hh:mm:ss} is working.");
+            _logger.LogInformation($"{DateTime.Now:HH:mm:ss} is working.");
             // 取得現有 ItemHub 所有的 Issues 
             string token = _appSettings.Secrets.GitHubToken;
             string url = $"https://api.github.com/graphql";
@@ -46,13 +47,25 @@ namespace Homo.Bet.Api
             using (HttpClient betClient = new HttpClient())
             using (BargainingChipDBContext dbContext = new BargainingChipDBContext(optionsBuilder.Options))
             {
+                githubClient.Timeout = TimeSpan.FromSeconds(30);
                 githubClient.DefaultRequestHeaders.UserAgent.TryParseAdd("request");
                 githubClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Token", token);
                 var httpContent = new StringContent(@"{""query"":""{    organization(login: \""homo-tw\"") {      repositories(affiliations: [OWNER], last: 10) {        edges {          node {            issues(states: [OPEN], last: 100) {              edges {                node { createdAt updatedAt title url number comments(first:100) { nodes { id createdAt author { login } } } assignees(first:20){ nodes { login }} projectItems(first: 10) {   nodes {     fieldValueByName(name: \""Status\"") {       ... on ProjectV2ItemFieldSingleSelectValue {         name       }     }   } }                }              }            }          }        }      }    }  }""}", System.Text.Encoding.UTF8, "application/json");
-                HttpResponseMessage response = githubClient.PostAsync(url, httpContent).GetAwaiter().GetResult();
+                HttpResponseMessage response;
+                try
+                {
+                    response = await githubClient.PostAsync(url, httpContent, cancellationToken);
+                }
+                catch (Exception ex) when (ex is HttpRequestException || ex is System.Threading.Tasks.TaskCanceledException)
+                {
+                    // GitHub 偶爾會斷線 / timeout，這次跳過就好，下個整點會再跑一次
+                    _logger.LogWarning(ex, "呼叫 GitHub GraphQL 失敗，本次略過");
+                    return;
+                }
+
                 if (response.IsSuccessStatusCode)
                 {
-                    string jsonResponse = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                    string jsonResponse = await response.Content.ReadAsStringAsync(cancellationToken);
 
                     // 解析 JSON 回應
                     JObject graphqlResponse = JObject.Parse(jsonResponse);
@@ -75,56 +88,69 @@ namespace Homo.Bet.Api
                     var githubIssueIds = issues.Select(item => (string)item.id).ToList();
                     var betTasks = TaskDataservice.GetAll(dbContext, (long)2, (long)6, null, null, githubIssueIds);
 
-                    issues.ForEach(issue =>
+                    foreach (var issue in issues)
                     {
                         var matchedTask = betTasks.Where(task => task.ExternalId == (string)issue.id).FirstOrDefault();
                         if (matchedTask == null)
                         {
                             System.Console.WriteLine($"skip matched Task");
-                            return;
+                            continue;
                         }
                         if (matchedTask.Assignee?.Username != issue.assignee && issue.assignee != null && issue.lastCommentUsername != null)
                         {
-                            DateTime lastUpdateDateTime;
+                            DateTime lastUpdateUtc;
 
-                            if (!DateTime.TryParse(issue.lastUpdate.ToString(), out lastUpdateDateTime))
+                            // Newtonsoft 會把 updatedAt 轉成 DateTime，ToString() 之後只剩下 UTC 的時鐘時間、
+                            // 沒有時區資訊，所以這裡要明確指定它是 UTC，再跟 DateTime.UtcNow 比才不會差 8 小時。
+                            if (!DateTime.TryParse(issue.lastUpdate.ToString(), CultureInfo.CurrentCulture,
+                                    DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out lastUpdateUtc))
                             {
-                                return;
+                                continue;
                             }
-                            
-                            // 轉換為本地時間進行比較
-                            DateTime now = DateTime.UtcNow;
-                            
-                            // 週六日跳過檢查
-                            if (now.DayOfWeek == DayOfWeek.Saturday || now.DayOfWeek == DayOfWeek.Sunday)
+
+                            DateTime nowUtc = DateTime.UtcNow;
+
+                            // 週六日跳過檢查（以台北時間為準）
+                            DateTime nowLocal = DateTime.Now;
+                            if (nowLocal.DayOfWeek == DayOfWeek.Saturday || nowLocal.DayOfWeek == DayOfWeek.Sunday)
                             {
-                                return;
+                                continue;
                             }
-                            
+
                             // 計算需要的小時數
                             double requiredHours = 24; // 預設 24 小時
-                            if (lastUpdateDateTime.DayOfWeek == DayOfWeek.Friday)
+                            if (lastUpdateUtc.ToLocalTime().DayOfWeek == DayOfWeek.Friday)
                             {
                                 requiredHours = 96; // 週五延到下週二
                             }
-                            
-                            if ((now - lastUpdateDateTime).TotalHours < requiredHours)
+
+                            if ((nowUtc - lastUpdateUtc).TotalHours < requiredHours)
                             {
-                                return;
+                                continue;
                             }
 
-                            httpContent = new StringContent($@"{{""body"": ""{issue.assignee} 違規""}}", System.Text.Encoding.UTF8, "application/json");
-                            var response = githubClient.PostAsync($"https://api.github.com/repos/homo-tw/itemhub/issues/{issue.id}/comments", httpContent);
+                            var commentContent = new StringContent($@"{{""body"": ""{issue.assignee} 違規""}}", System.Text.Encoding.UTF8, "application/json");
+                            try
+                            {
+                                // 一定要 await，之前沒 await 會在 HttpClient 被 dispose 後才送出，留言其實不會成功
+                                var commentResponse = await githubClient.PostAsync($"https://api.github.com/repos/homo-tw/itemhub/issues/{issue.id}/comments", commentContent, cancellationToken);
+                                if (!commentResponse.IsSuccessStatusCode)
+                                {
+                                    _logger.LogWarning($"issue #{issue.id} 留言失敗: {commentResponse.StatusCode}");
+                                }
+                            }
+                            catch (Exception ex) when (ex is HttpRequestException || ex is System.Threading.Tasks.TaskCanceledException)
+                            {
+                                _logger.LogWarning(ex, $"issue #{issue.id} 留言失敗");
+                            }
                         }
-                    });
+                    }
                 }
                 else
                 {
                     Console.WriteLine($"Failed to fetch issues: {response.StatusCode}");
                 }
             }
-
-            return System.Threading.Tasks.Task.CompletedTask;
         }
 
         public override System.Threading.Tasks.Task StopAsync(CancellationToken cancellationToken)

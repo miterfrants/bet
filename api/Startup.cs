@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using Microsoft.AspNetCore.Builder;
@@ -76,42 +76,42 @@ namespace Homo.Bet.Api
             services.AddCronJob<GitHubIssuesNotificationCronJob>(c =>
             {
                 c.TimeZoneInfo = TimeZoneInfo.Local;
-                c.CronExpression = @"0 0,8 * * 1-5";
+                c.CronExpression = @"0 8,16 * * 1-5";  // 平日 08:00、16:00（台北時間）
             });
             services.AddCronJob<GitHubAutoCommentViolationCronJob>(c =>
             {
                 c.TimeZoneInfo = TimeZoneInfo.Local;
-                c.CronExpression = @"0 * * * *";
+                c.CronExpression = @"0 * * * *";  // 每小時整點
             });
             services.AddCronJob<RenewCoinLog>(c =>
             {
                 c.TimeZoneInfo = TimeZoneInfo.Local;
-                c.CronExpression = @"0 0 * * 0";
+                c.CronExpression = @"0 8 * * 0";  // 每週日 08:00（台北時間）
             });
             services.AddCronJob<BetCoinNotification>(c =>
             {
                 c.TimeZoneInfo = TimeZoneInfo.Local;
-                c.CronExpression = @"0 9 * * 3";
+                c.CronExpression = @"0 17 * * 3";  // 每週三 17:00（台北時間）
             });
 
             services.AddCronJob<WorkingTimeCheckCronJob>(c =>
             {
                 c.TimeZoneInfo = TimeZoneInfo.Local;
-                c.CronExpression = @"0 2 * * *";
+                c.CronExpression = @"0 2 * * *";  // 每天凌晨 02:00（台北時間），檢查前一天的工時
             });
 
-            // 註冊每週卡片生成服務（每週日 00:00 執行，與發放 Coins 同時）
+            // 註冊每週卡片生成服務（每週日 08:00 執行，與發放 Coins 同時）
             services.AddCronJob<WeeklyCardGenerationCronJob>(c =>
             {
                 c.TimeZoneInfo = TimeZoneInfo.Local;
-                c.CronExpression = @"0 0 * * 0";  // 每週日 00:00
+                c.CronExpression = @"0 8 * * 0";  // 每週日 08:00（台北時間）
             });
 
-            // 註冊每日過期卡片檢查服務（每天 00:00 執行）
+            // 註冊每日過期卡片檢查服務（每天 08:00 執行）
             services.AddCronJob<CheckExpiredCardsCronJob>(c =>
             {
                 c.TimeZoneInfo = TimeZoneInfo.Local;
-                c.CronExpression = @"0 0 * * *";  // 每天 00:00
+                c.CronExpression = @"0 8 * * *";  // 每天 08:00（台北時間）
             });
             services.AddSwaggerGen(c =>
             {
