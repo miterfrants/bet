@@ -36,7 +36,8 @@ window.injectHead = (betCoins) => {
     const elHeaderItem = elNotification || elDetailMenu.parentNode;
     const elHeader = elHeaderItem.parentNode;
 
-    if (elHeader.dataset.injected !== 'true') {
+    // 用實際元素是否存在判斷，header 被 GitHub 重繪後仍可重新塞入
+    if (!elHeader.querySelector('.homo-bet-coins')) {
         const elHeaderItemBetIcon = document.createElement('div');
         [
             'Header-item',
@@ -55,7 +56,6 @@ window.injectHead = (betCoins) => {
         elHeaderItemBetIcon.querySelector('.homo-bet-coins').dataset[
             `${window.variablePrefix}betCoins`
         ] = betCoins;
-        elHeader.dataset.injected = 'true';
     }
 };
 window.githubProjectStatusChanged = (e, projectId) => {
@@ -828,9 +828,10 @@ if (
             'earnCoins',
             'betCoins',
         ]);
-        window.injectHead(storage.betCoins);
+        // GitHub 載入後會非同步重繪 header，太早塞會被蓋掉，所以延遲塞入
         setTimeout(() => {
             window.injectIssuesButton();
+            window.injectHead(storage.betCoins);
         }, 3000);
     })();
 }
@@ -847,7 +848,10 @@ if (
             'earnCoins',
             'betCoins',
         ]);
-        window.injectHead(storage.betCoins);
+        // GitHub 載入後會非同步重繪 header，太早塞會被蓋掉，所以延遲塞入
+        setTimeout(() => {
+            window.injectHead(storage.betCoins);
+        }, 3000);
 
         const issueId = location.pathname.split('/').pop();
         chrome.runtime.sendMessage(
