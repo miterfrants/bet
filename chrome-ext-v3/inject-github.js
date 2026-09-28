@@ -126,10 +126,18 @@ window.injectHTMLToIssueElement = async (
     extraData,
     githubProjects
 ) => {
-    // 新版列表用 data-testid / MainContent-module，舊版列表 (.js-issue-row) 用 issue_{n}_link
+    // 新版列表用 data-testid / MainContent-module，舊版列表 (.js-issue-row) 用 issue_{n}_link，
+    // 都找不到時退回到有文字的 issue 連結
     const elTitle =
         elIssue.querySelector('[data-testid="issue-pr-title-link"]') ||
-        elIssue.querySelector('a[id^="issue_"][id$="_link"]');
+        elIssue.querySelector('a[id^="issue_"][id$="_link"]') ||
+        [
+            ...elIssue.querySelectorAll('a[href*="/homo-tw/itemhub/issues/"]'),
+        ].find(
+            (el) =>
+                window.getIssueNumberFromLink(el) ===
+                    String(extraData.externalId) && el.textContent.trim()
+        );
     const elInjectContainer =
         elIssue.querySelector('[class^=MainContent-module__inner]') ||
         elTitle?.parentNode;
@@ -549,25 +557,67 @@ window.injectHTMLToIssueElement = async (
     }
 };
 
-// 從 issue 連結找出整列 issue 元素，同時支援新版 ([role="listitem"]) 與舊版 (.js-issue-row) 列表
+window.getIssueNumberFromLink = (elLink) => {
+    // 相容相對路徑、完整網址、以及帶 query / hash 的 href
+    const matched = (elLink.getAttribute('href') || '').match(
+        /\/homo-tw\/itemhub\/issues\/(\d+)\/?(?:[?#].*)?$/
+    );
+    return matched ? matched[1] : null;
+};
+
+// 從 issue 連結往上找出整列 issue 元素：
+// 先試已知結構 (新版 [role="listitem"]、舊版 .js-issue-row、
+// ListView 版 [data-listview-component="items-list"] 的直接子元素)，
+// 都不符合時，往上爬到「不包含其他 issue 連結」的最外層元素，不依賴特定 HTML 結構
+window.findIssueRow = (elLink, issueNumber) => {
+    const elKnownRow = elLink.closest('[role="listitem"], .js-issue-row');
+    if (elKnownRow) {
+        return elKnownRow;
+    }
+    const elListView = elLink.closest(
+        '[data-listview-component="items-list"]'
+    );
+    if (elListView) {
+        let elListViewRow = elLink;
+        while (elListViewRow.parentElement !== elListView) {
+            elListViewRow = elListViewRow.parentElement;
+        }
+        return elListViewRow;
+    }
+    let elRow = elLink;
+    while (elRow.parentElement && elRow.parentElement !== document.body) {
+        const containsOtherIssue = [
+            ...elRow.parentElement.querySelectorAll('a[href*="/issues/"]'),
+        ].some((el) => {
+            const number = window.getIssueNumberFromLink(el);
+            return number && number !== issueNumber;
+        });
+        if (containsOtherIssue) {
+            break;
+        }
+        elRow = elRow.parentElement;
+    }
+    return elRow;
+};
+
 window.findIssueElements = () => {
     const issueElements = {};
-    document
-        .querySelectorAll('a[href^="/homo-tw/itemhub/issues/"]')
-        .forEach((elLink) => {
-            const matched = elLink
-                .getAttribute('href')
-                .match(/^\/homo-tw\/itemhub\/issues\/(\d+)$/);
-            if (!matched) {
+    document.querySelectorAll('a[href*="/homo-tw/itemhub/issues/"]').forEach(
+        (elLink) => {
+            const issueNumber = window.getIssueNumberFromLink(elLink);
+            // 只取有文字的連結 (標題)，避開留言數之類的 icon 連結
+            if (
+                !issueNumber ||
+                issueElements[issueNumber] ||
+                !elLink.textContent.trim()
+            ) {
                 return;
             }
-            const elIssue = elLink.closest('[role="listitem"], .js-issue-row');
-            if (!elIssue || issueElements[matched[1]]) {
-                return;
-            }
-            elIssue.dataset.id = matched[1];
-            issueElements[matched[1]] = elIssue;
-        });
+            const elIssue = window.findIssueRow(elLink, issueNumber);
+            elIssue.dataset.id = issueNumber;
+            issueElements[issueNumber] = elIssue;
+        }
+    );
     return issueElements;
 };
 
@@ -575,7 +625,12 @@ window.injectIssuesButton = async () => {
     const issueElements = window.findIssueElements();
     const externalIds = Object.keys(issueElements);
     if (externalIds.length === 0) {
-        console.warn('[homo-bet] 找不到 issue 列表元素，GitHub 可能改了 HTML 結構');
+        console.warn(
+            '[homo-bet] 找不到 issue 列表元素，GitHub 可能改了 HTML 結構',
+            [...document.querySelectorAll('a[href*="/issues/"]')]
+                .slice(0, 5)
+                .map((el) => el.getAttribute('href'))
+        );
         return;
     }
     chrome.runtime.sendMessage(
