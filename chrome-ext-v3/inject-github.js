@@ -126,13 +126,18 @@ window.injectHTMLToIssueElement = async (
     extraData,
     githubProjects
 ) => {
-    const elInjectContainer = elIssue.querySelector(
-        '[class^=MainContent-module__inner]'
-    );
+    // 新版列表用 data-testid / MainContent-module，舊版列表 (.js-issue-row) 用 issue_{n}_link
+    const elTitle =
+        elIssue.querySelector('[data-testid="issue-pr-title-link"]') ||
+        elIssue.querySelector('a[id^="issue_"][id$="_link"]');
+    const elInjectContainer =
+        elIssue.querySelector('[class^=MainContent-module__inner]') ||
+        elTitle?.parentNode;
+    if (!elTitle || !elInjectContainer) {
+        console.warn('[homo-bet] 找不到 issue 標題或按鈕容器', elIssue);
+        return;
+    }
     const storage = await chrome.storage.sync.get(['userInfo']);
-    const elTitle = elIssue.querySelector(
-        '[data-testid="issue-pr-title-link"]'
-    );
     const qty =
         extraData.ownerLockedBet +
         extraData.ownerFreeBet +
@@ -544,19 +549,35 @@ window.injectHTMLToIssueElement = async (
     }
 };
 
-window.injectIssuesButton = async (elIssues) => {
-    const externalIds = [];
-    elIssues.forEach((elIssue) => {
-        const elLink = elIssue.querySelector('div>h3 a');
-        if (!elLink) {
-            return;
-        }
-        const externalId = elLink
-            .getAttribute('href')
-            .replace('/homo-tw/itemhub/issues/', '');
-        elIssue.dataset.id = externalId;
-        externalIds.push(externalId);
-    });
+// 從 issue 連結找出整列 issue 元素，同時支援新版 ([role="listitem"]) 與舊版 (.js-issue-row) 列表
+window.findIssueElements = () => {
+    const issueElements = {};
+    document
+        .querySelectorAll('a[href^="/homo-tw/itemhub/issues/"]')
+        .forEach((elLink) => {
+            const matched = elLink
+                .getAttribute('href')
+                .match(/^\/homo-tw\/itemhub\/issues\/(\d+)$/);
+            if (!matched) {
+                return;
+            }
+            const elIssue = elLink.closest('[role="listitem"], .js-issue-row');
+            if (!elIssue || issueElements[matched[1]]) {
+                return;
+            }
+            elIssue.dataset.id = matched[1];
+            issueElements[matched[1]] = elIssue;
+        });
+    return issueElements;
+};
+
+window.injectIssuesButton = async () => {
+    const issueElements = window.findIssueElements();
+    const externalIds = Object.keys(issueElements);
+    if (externalIds.length === 0) {
+        console.warn('[homo-bet] 找不到 issue 列表元素，GitHub 可能改了 HTML 結構');
+        return;
+    }
     chrome.runtime.sendMessage(
         { action: 'get-tasks', externalIds },
         (issues) => {
@@ -564,10 +585,10 @@ window.injectIssuesButton = async (elIssues) => {
                 { action: 'get-github-projects' },
                 (githubProjects) => {
                     issues.forEach((issue) => {
-                        const elIssue = document.querySelector(
-                            `[href="/homo-tw/itemhub/issues/${issue.externalId}"]`
-                        ).parentNode.parentNode.parentNode.parentNode
-                            .parentNode;
+                        const elIssue = issueElements[issue.externalId];
+                        if (!elIssue) {
+                            return;
+                        }
                         window.injectHTMLToIssueElement(
                             elIssue,
                             issue,
@@ -754,8 +775,7 @@ if (
         ]);
         window.injectHead(storage.betCoins);
         setTimeout(() => {
-            const elIssues = document.querySelectorAll('[role="listitem"]');
-            window.injectIssuesButton(elIssues);
+            window.injectIssuesButton();
         }, 3000);
     })();
 }
